@@ -16,11 +16,12 @@ void Server::start(int port)
     struct sockaddr_in address;
     int opt = 1;
 
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 	{
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
+	// Configuration du port
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) 
 	{
         perror("setsockopt");
@@ -30,12 +31,14 @@ void Server::start(int port)
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(port);
+	//Attachement du socket au port
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) 
 	{
         perror("bind failed");
         close(server_fd);
         exit(EXIT_FAILURE);
     }
+	// Écouter sur le port
     if (listen(server_fd, 3) < 0) 
 	{
         perror("listen");
@@ -45,16 +48,21 @@ void Server::start(int port)
     std::vector<pollfd> poll_fds;
     pollfd server_pollfd = {server_fd, POLLIN, 0};
     poll_fds.push_back(server_pollfd);
-    while (true) {
+    while (true) 
+	{
         int poll_count = poll(poll_fds.data(), poll_fds.size(), -1);
-        if (poll_count < 0) {
+        if (poll_count < 0) 
+		{
             perror("poll");
             close(server_fd);
             exit(EXIT_FAILURE);
         }
-        for (size_t i = 0; i < poll_fds.size(); ++i) {
-            if (poll_fds[i].revents & POLLIN) {
-                if (poll_fds[i].fd == server_fd) {
+        for (size_t i = 0; i < poll_fds.size(); ++i) 
+		{
+            if (poll_fds[i].revents & POLLIN) 
+			{
+                if (poll_fds[i].fd == server_fd) 
+				{
                     // Nouvelle connexion
                     int new_socket;
                     struct sockaddr_in client_address;
@@ -65,15 +73,20 @@ void Server::start(int port)
                     }
                     pollfd client_pollfd = {new_socket, POLLIN, 0};
                     poll_fds.push_back(client_pollfd);
-                } else {
+                } 
+				else 
+				{
                     // Données reçues d'un client existant
                     char buffer[1024] = {0};
                     int valread = read(poll_fds[i].fd, buffer, 1024);
-                    if (valread <= 0) {
+                    if (valread <= 0) 
+					{
                         close(poll_fds[i].fd);
                         poll_fds.erase(poll_fds.begin() + i);
                         --i;
-                    } else {
+                    } 
+					else 
+					{
                         handleMessage(poll_fds[i].fd, buffer);
                     }
                 }
