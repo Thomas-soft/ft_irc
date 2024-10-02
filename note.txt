@@ -1,0 +1,219 @@
+Une socket est un descripteur de fichier qui permet d'envoyer des messages a distance.
+
+Socket internet:
+
+Stream Socket (SOCK_STREM) : Transport de donnees fiable et connecte, au cout d'une performance elever.
+
+Datagram Soket (SOCK_DGRAM) : Transmission sans connexion, rapide mais sans garantie.
+
+
+Les octets:
+
+On peut envoyer et recevoir les donnes de deux facons:
+
+Le decimal 12042 est represente par l'hexadecimal 2F0A.
+
+Par sa taille, cet entier doit etre envoyer sur deux octets
+
+Facon "gros-boutisme"
+
+Les octets sont envoye du plus gros au plus petit, donc 2F & 0A.
+
+Facon "petit-boutisme" (notamment processeur intel)
+
+Les octets sont envoye du plus petit au plus gros, donc 0A & 2F.
+
+Pour fix ce probleme:
+
+uint32_t htonl(uint32_t hostlong);  //"Host to network long"
+uint16_t htons(uint16_t hostshort); //"Host to network short"
+uint32_t ntohl(uint32_t netlong);   //"Network to host long"
+uint16_t ntohs(uint16_t netshort);  //"Network to host short"
+
+
+
+Les structures fondamentales pour indiquer l’adresse IP et le port de connexion se trouvent dans la bibliothèque <netinet/in.h>. Elles ont deux variantes, une pour l’IPv4 et l’autre pour l’IPv6.
+
+// Pour une adresse IPv4 uniquement
+// (voir sockaddr_in6 pour IPv6)
+
+struct sockaddr_in {
+    sa_family_t    sin_family;
+    in_port_t      sin_port;
+    struct in_addr sin_addr;
+};
+
+struct in_addr {
+    uint32_t       s_addr;
+};
+Explications
+sin_family: Version du protocole internet (IPv4/IPv6), pour IPv4 : AF_INET
+sin_port: Le port auquel on veut se connecter. Ne pas oublier de convertir en format "gros-boustime" en utilisant soit htons() soit htonl (depend du port)
+sin_addr: une petite structure de type in_addr, qui contient la représentation en entier d’une adresse IPv4.
+
+Dans la structure "in_addr" , une seule variable est presente, s_addr, qui represente l'adresse IP entier.
+
+Convertir une adresse IP en entier
+
+Il faut faire appel a une fonction de la bibliothèque <arpa/inet.h> : inet_pton() (presentation to network)
+
+int inet_pton(int af, const char * src, void *dst);
+
+af: Version du protocole internet (IPv4/IPv6), pour IPv4 : AF_INET
+src: une chaine de caractere contenant l'adresse IP a convertir
+dst: un pointeur vers une structure in_addr (IPv4) dans laquelle stocker le resultat de la conversion
+
+La fonction return:
+1: succes
+0: si src si la version du protocole de l'IP n'est pas valide
+-1: si af la version du protocole de l'IP n'est pas valide
+
+Exemple pour une adresse IPv4:
+
+struct sockaddr_in sa;
+inet_pton(AF_INET, "216.58.192.3", &(sa.sin_addr));
+
+L'inverse existe, inet_ntop() (network to presentation) -> convertir un entier en une adresse ip lisible.
+
+Crée un serveur :
+
+#include <sys/socket.h>
+
+int socket(int domain, int type, int protocol);
+
+domain: Version du protocole internet (IPv4/IPv6), pour IPv4 : AF_INET
+type: type du socket (généralement SOCK_STREAM ou SOCK_DGRAM.)
+protocol: Protocol à utiliser avec la socket. Toujours mettre 0 car il y a qu'un protocole valide par type de socket TCP/UDP
+
+socket() return :
+
+-1 en cas d'échec et indique l'erreur rencontrée dans errno.
+Return le fd de la nouvelle socket en cas de réussite.
+
+Mais le socket n'est pas connecté en ce moment, nous voulons naturellement le lié à une adresse socket:
+
+Adresse locale, en utilisant la fonction bind()
+
+Adresse distante, en utilisant la fonction connect()
+
+CLIENT:
+
+Pour développer un client, nous avons besoin d'un socket qui se connecte à un serveur distant, avec la fonction connect() comme dit au-dessus.
+
+int connect(int sockfd, const struct sockaddr *serv_addr, socklen_t addrlen);
+
+sockfd: descripteur de fichier qu'on récupére avec notre fonction socket()
+serv_addr: pointeur vers la structure de données contenant les informations de connexion. sockaddr_in (IPv4)
+addrlen: la longeur en octets de la structure mentionné avant.
+
+
+SERVER:
+
+La fonction bind() permet de lier la socket à une adresse ip et un port local. Elle est presque identique à la fonction connect()
+
+int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+
+sockfd: descripteur de fichier qu'on récupére avec notre fonction socket()
+serv_addr: pointeur vers la structure de données contenant les informations de connexion. sockaddr_in (IPv4)
+addrlen: la longeur en octets de la structure mentionné avant.
+
+return : 
+
+0: succès
+-1: Erreur stocké dans errno
+
+Pour continuer nous devons marquer la socket comme "passive". Elle attend des demandes de connexion depuis l'adresse et le port indiqué dans la fonction bind()
+
+Nous allons pour ça utiliser la fonction listen()
+
+int listen(int sockfd, int backlog);
+
+sockfd: descripteur de fichier qu'on récupére avec notre fonction socket()
+backlong: En général, 20, c'est l'entier qui représente le nombre de connexions autorisées dans la file d'attente.
+
+listen() return:
+
+0: succès
+-1: Erreur stocké dans errno
+
+En suite nous avons besoin d'accepter les demandes de connexion d'un client, car lorsque celui-ci utilise connect() pour se connecter
+au server, il est placé en file d'attente.
+
+int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+
+sockfd: descripteur de fichier qu'on récupére avec notre fonction socket()
+serv_addr: pointeur vers la structure de données contenant les informations de connexion. sockaddr_in (IPv4) (si on ne souhaite pas recevoir IP&Port du client, on peut mettre NULL)
+addrlen: la longeur en octets de la structure mentionné avant. (mettre NULL, si c'est NULL avant)
+
+Le programme tourne en boucle jusqu'à détecter une connexion a cause de la fonction accept()
+
+Envoyer des données via socket:
+
+la fonction send() permet d'envoyé des données via une socket de type "stream" qui utilise TCP.
+
+ssize_t send(int socket, const void *buf, size_t len, int flags);
+
+socket: 
+Server: le fd du client qu'on aura recupéré via la fonction accept()
+Client: descripteur de fichier qu'on récupére avec notre fonction socket()
+
+buf: message a envoyé
+
+len : taille du message
+
+flags: un entier qui contient des flags concernant la transmission du message (dispo ici http://manpagesfr.free.fr/man/man2/send.2.html)
+
+
+Maintenant, nous souhaitons faire en sorte que notre serveur accepte plusieurs client en simultané. Car on peut croire que le serveur tourne
+à l'infini, mais en réalité, il reste bloqué sur la fonction "accept()" tant qu'un client ne se connecte pas. A la moindre connexion, le serveur se stop.
+
+Il y a des méthodes qui rendent nos sockets non-bloquantes et détecter quand elles sont prête à être utiliser.
+
+Rendre les sockets non-bloquantes avec fcntl()
+
+fcntl() de la library <unistd.h> et <fcntl.h>
+
+socket_fd = socket(PF_INET, SOCK_STREAM, 0); // création d'un socket
+fcntl(socket_fd, F_SETFL, O_NONBLOCK); // le socket n'est plus bloquant.
+
+Dans ce cas, les sockets ne sont plus bloquant, alors les appels fonction à recv(), ou accept() par exemple, renverront immédiamanet -1.
+
+On peut de cette manière boucler sur nos sockets une à une pour voir si elles ont des choses à dire, mais pas optimisé pour notre cpu. 
+Il y a des meilleures solution pour faire cela.
+
+Surveiller les sockets avec select()
+
+Notre but est de surveiller chaque socket et être avertis lorsque l'une d'entre elle est prête pour une opération. Si elle est prête, alors on l'execute
+
+C'est ce que fait la fonction select() ! il nous faudra importer <sys/select.h>, <sys/time.h>, <sys/types.h>, et <unistd.h>.
+
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+
+nfds: entier qui indique la valeur du plus grand descripteur de fichier à surveiller.
+readfds: ensemble de descripteurs de fichiers à surveiller pour la lecture, pour vérifier qu'un appel à write() ou recv() ne bloquera pas (peut être NULL)
+writefds ensemble de descripteurs de fichiers à surveiller pour l'écriture, pour vérifier qu'un appel à write() ou send() ne bloquera pas (peut être NULL)
+exceptfds: ensemble de descripteurs de fichiers à surveiller pour l'occurrence de condition d'exception. (Peut être NULL)
+timeout: un délai après lequel on force notre fonction select() à se stopper si aucun des FD ne changent d'état.
+
+select() return :
+
+-1: indique l'erreur dans errno
+0: Modifie chacun des sets pour indiquer quels fd sont prêts pour une opération. Elle renvoi aussi le nombre total de fd qui sont prêts parmi les trois ensembles.
+
+Pour manipuler les ensembles de fd que l'on veut surveiller avec select() , nous allons utiliser les macro suivant:
+
+void FD_CLR(int fd, fd_set *set);   // Retire un fd de l'ensemble
+int  FD_ISSET(int fd, fd_set *set); // Vérifie si un fd fait partie de l'ensemble
+void FD_SET(int fd, fd_set *set);   // Ajoute un fd à l'ensemble
+void FD_ZERO(fd_set *set);          // Met l'ensemble à 0
+
+Timeout de select()
+
+La structure à utiliser pour la valeur temporelle, timeval, se trouve dans <sys/time.h> :
+
+struct timeval {
+    long    tv_sec;    // secondes
+    long    tv_usec;   // microsecondes
+};
+
+Si cette valeur de temps est à 0, select() retournera immédiatement ; si on y met NULL, select() pourra bloquer indéfiniment si aucun des descripteurs de fichier ne changent d’état.
