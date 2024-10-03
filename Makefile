@@ -13,6 +13,9 @@
 NAME		= irc
 
 SRCS		=	src/main.cpp \
+				src/Server.cpp \
+				src/Client.cpp \
+				src/Commands.cpp
 				
 
 OBJS		= $(SRCS:.cpp=.o)

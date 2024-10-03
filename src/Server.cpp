@@ -27,7 +27,7 @@ void    Server::start()
     }
     _address.sin_family = AF_INET;
     _address.sin_addr.s_addr = INADDR_ANY;
-    _address.sin_port = _port;
+    _address.sin_port = htons(_port);
     if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) == -1)
     {
         perror("Server bind");
@@ -45,6 +45,7 @@ void    Server::start()
     server_pollfd.events = POLLIN;
     server_pollfd.revents = 0;
     _pollfd.push_back(server_pollfd);
+    std::cout << "Launched!" << std::endl;
 
     while (1)
     {
@@ -59,12 +60,12 @@ void    Server::start()
         }
         if (status == 0)
             continue ;
+        
         for (size_t i = 0; i < _pollfd.size(); i++)
         {
             if (_pollfd[i].revents & POLLIN)
             {
                 // Information recu
-
                 // Nouvelle connexion
                 if (_pollfd[i].fd == _server_fd)
                 {
@@ -73,8 +74,7 @@ void    Server::start()
                 // Client a envoye une info
                 else
                 {
-
-                    read_client();
+                    read_client(i);
                 }
             }
         }
@@ -84,6 +84,7 @@ void    Server::start()
 void    Server::accept_client()
 {
     int new_socket;
+    std::string nick;
 
     struct sockaddr_in  client_address;
     socklen_t client_len = sizeof(client_address);
@@ -91,9 +92,42 @@ void    Server::accept_client()
         perror("accept");
     pollfd client_pollfd = {new_socket, POLLIN, 0};
     _pollfd.push_back(client_pollfd);
+    Client new_client(client_pollfd.fd);
 }
 
-void    Server::read_client()
+void    Server::read_client(size_t i)
 {
-    
+    char    buffer[512] = {0};
+
+    std::cout << "ici" << std::endl;
+    if (recv(_pollfd[i].fd, buffer, sizeof(buffer), 0) <= 0)
+    {
+        close(_pollfd[i].fd);
+        _pollfd.erase(_pollfd.begin() + i);
+        std::cout << "Client disconnected!" << std::endl;
+    }
+    else
+    {
+        std::cout << "Message from client (fd=" << _pollfd[i].fd << "): " << buffer << std::endl;
+        parse(buffer, i);
+    }
+}
+
+void    Server::parse(char *buffer, size_t i)
+{
+    // std::string cmd = buffer;
+    std::string cmd = "";
+    std::string args = "";
+    std::stringstream   stream(buffer);
+    (void)i;
+
+    stream >> cmd;
+    while (!std::getline(stream, args));
+    std::cout << cmd << args << std::endl;
+    execute_cmd(cmd, args, i);
+}
+
+const std::vector<Client>& Server::get_client()
+{
+    return (_client);
 }

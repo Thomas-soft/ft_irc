@@ -121,3 +121,76 @@ events: evement attendu
 Plusieurs autre evenement: http://manpagesfr.free.fr/man/man2/poll.2.html
 
 Quand poll() est termine, on pourra verifier revents de chaque element pour voir s'ils ont POLLIN ou POLLOUT
+
+
+
+
+
+
+
+
+
+Toutes les commandes à faire :
+"PASS", "NICK", "USER", "QUIT", "PING", "JOIN", "PART", "TOPIC", "PRIVMSG", "MODE", "INVITE", "KICK"
+
+Syntax RPL:
+:ft_irc.com <CODE_RPL> <RPL>
+
+Exemple de commandes (du client au serveur):
+- JOIN #channel,mdp #channel2 #channel3,mdp2
+- TOPIC #channel :Le topic du channel
+
+Exemple de messages RPL:
+- :ft_irc.com 332 #channel :<topic>
+
+MODE - Changer le mode du channel :
+— i : Définir/supprimer le canal sur invitation uniquement
+— k : Définir/supprimer la clé du canal (mot de passe)
+— l : Définir/supprimer la limite d’utilisateurs pour le canal
+— o : Donner/retirer le privilège de l’opérateur de canal
+— t : Définir/supprimer les restrictions de la commande TOPIC pour les opé-
+rateurs de canaux
+
+Attention:
+- Par defaut celui qui cree le channel est operator.
+
+
+Ce qu'on recoit du client :
+
+CAP LS\r\n
+
+NICK ttofil\r\n
+
+USER ttofil ttofil 127.0.0.1 :Thomas Tofil\r\n
+
+MODE dmeurant +i\r\n
+
+WHOIS ttofil
+ ttofil 127.0.0.1 :Thomas Tofil\r\n
+
+PING ft_irc.com\r\n
+
+WHOIS ttofil\r\n
+
+
+
+
+Les messages RPL de bienvenue :
+
+:ft_irc.com 001 toto :Welcome to the ft_irc.com Network, toto!toto@toto\r\n
+:ft_irc.com 002 toto :Your host is ft_irc.com, running version 1.0\r\n
+:ft_irc.com 003 toto :This server was created 2024/05/15 10:26:37\r\n
+:ft_irc.com 004 toto :There are 1 users connected\r\n
+:ft_irc.com 005 toto :The channels must begin with a '#'\r\nNicklen = 30\r\n
+
+
+
+nickname :
+    - max char length : 9
+    - max channels : 10
+channels :
+    - max char length : 200
+    - Ne doit pas contenir : ' ', '^G', 'ASCII 7'
+messages :
+    - une commande peut contenir au maximum 15 parametres
+    - max char length : 510 + \r\n

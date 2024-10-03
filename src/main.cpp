@@ -8,7 +8,7 @@ int ft_atoi(char *cPort)
     // Verifier si il contient que des chiffres
     for (size_t i = 0; i < port.size(); i++)
         if (!std::isdigit(port[i]))
-            return (-1);
+            return (EXIT_FAILURE);
     return (std::atoi(cPort));
 }
 
@@ -31,7 +31,7 @@ int main(int ac, char **av)
 		std::cerr << "Error with port number !" << std::endl;
 		std::cout << "Usage:" << std::endl;
 		std::cout << "./ft_ircserv <port> <password>" << std::endl;
-		return (1);
+		return (EXIT_FAILURE);
 	}
     Server  server(port, pass);
     server.start();

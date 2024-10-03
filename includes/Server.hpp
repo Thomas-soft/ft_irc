@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -9,7 +7,10 @@
 #include <sys/socket.h>
 #include <poll.h>
 #include <unistd.h>
-
+#include <cstdio>
+#include <sstream>
+#include "Client.hpp"
+#include "Commands.hpp"
 
 class Server
 {
@@ -19,6 +20,7 @@ class Server
         struct sockaddr_in  _address;
         std::string _pass;
         std::vector<pollfd> _pollfd;
+        std::vector<Client> _client;
         Server();
 
     public:
@@ -26,5 +28,7 @@ class Server
         ~Server();
         void    start();
         void    accept_client();
-        void    read_client();
+        void    read_client(size_t i);
+        void    parse(char *buffer, size_t i);
+        const std::vector<Client>& get_client();
 };
