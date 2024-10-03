@@ -93,15 +93,30 @@ void    Server::accept_client()
     pollfd client_pollfd = {new_socket, POLLIN, 0};
     _pollfd.push_back(client_pollfd);
     Client new_client(client_pollfd.fd);
+	_client.push_back(new_client);
+
+}
+
+int Server::get_client_fd(int fd)
+{
+	int i = 0;
+
+	while (i < (int)_client.size())
+	{
+		if (_client[i].get_fd() == fd)
+			return (i);
+		i++;
+	}
+	return (-1);
 }
 
 void    Server::read_client(size_t i)
 {
     char    buffer[512] = {0};
 
-    std::cout << "ici" << std::endl;
     if (recv(_pollfd[i].fd, buffer, sizeof(buffer), 0) <= 0)
     {
+		_client.erase(_client.begin() + get_client_fd(_pollfd[i].fd));
         close(_pollfd[i].fd);
         _pollfd.erase(_pollfd.begin() + i);
         std::cout << "Client disconnected!" << std::endl;
@@ -123,11 +138,6 @@ void    Server::parse(char *buffer, size_t i)
 
     stream >> cmd;
     while (!std::getline(stream, args));
-    std::cout << cmd << args << std::endl;
-    execute_cmd(cmd, args, i);
-}
-
-const std::vector<Client>& Server::get_client()
-{
-    return (_client);
+    //std::cout << cmd << args << std::endl;
+    //execute_cmd(cmd, args, i);
 }

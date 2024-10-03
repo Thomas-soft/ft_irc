@@ -10,6 +10,11 @@ Client::Client(int fd):_fd(fd)
 
 }
 
+int Client::get_fd()const
+{
+	return (_fd);
+}
+
 Client::~Client()
 {
 

@@ -12,6 +12,8 @@
 #include "Client.hpp"
 #include "Commands.hpp"
 
+class Client;
+
 class Server
 {
     private:
@@ -30,5 +32,5 @@ class Server
         void    accept_client();
         void    read_client(size_t i);
         void    parse(char *buffer, size_t i);
-        const std::vector<Client>& get_client();
+        int		get_client_fd(int fd);
 };
