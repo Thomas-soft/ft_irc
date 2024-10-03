@@ -1,21 +1,21 @@
 #include "../includes/Commands.hpp"
 
-void    execute_cmd(std::string cmd, std::string args, size_t i)
+void    execute_cmd(std::string cmd, std::string args, Server &server)
 {
     std::string cmd_func[] = {"PASS"};
-    void    (*fun[])(std::string args, size_t i) = {pass};
+    void    (*fun[])(std::string args, Server &server) = {pass};
 
-    for (size_t j = 0; j < 1; j++)
+    for (size_t i = 0; i < 1; i++)
     {
-        if (cmd_func[j] == cmd)
-            (*fun[j])(args, i);
+        if (cmd_func[i] == cmd)
+            (*fun[i])(args, server);
     }
 }
 
-void    pass(std::string args, size_t i)
+void    pass(std::string args, Server &server)
 {
     (void)args;
-    (void)i;
+    (void)server;
 }
 
 // Dans la commande MSG on aura besoin de recuperer tout les clients dispo dans un channel

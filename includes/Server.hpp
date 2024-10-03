@@ -31,6 +31,8 @@ class Server
         void    start();
         void    accept_client();
         void    read_client(size_t i);
-        void    parse(char *buffer, size_t i);
+        void    parse(char *buffer);
         int		get_client_fd(int fd);
+        void    close_all_fd();
+        void    ft_exit(std::string error);
 };
