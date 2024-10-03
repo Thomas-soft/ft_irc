@@ -1,30 +1,39 @@
-CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: dmeurant <marvin@42.fr>                    +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2023/11/27 09:08:49 by dmeurant          #+#    #+#              #
+#    Updated: 2023/11/27 09:08:50 by dmeurant         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
 
-# Normal
-NAME = ircserv
-FUNC = ft_irc.cpp
-OBJ = $(patsubst srcs/%.cpp, obj/%.o, $(FUNC))
+NAME		= irc
 
-HEADER = ft_irc.hpp
-# Compil
-all: 	${NAME}
+SRCS		=	src/main.cpp \
+				
 
-$(OBJ): ${HEADER}
+OBJS		= $(SRCS:.cpp=.o)
+RM			= rm -f
+FLAGS		= -Wall -Wextra -Werror -std=c++98
+COMPILER	= c++ 
 
-${NAME}: ${OBJ}
-	${CC} ${OBJ} $(CFLAGS) -o $(NAME)
+.cpp.o:
+	${COMPILER} ${FLAGS} -c $< -o ${<:.cpp=.o}
 
-obj/%.o: srcs/%.cpp
-	@mkdir -p obj/
-	$(CC) $(CFLAGS) -c $< -o $@
+$(NAME): ${OBJS}
+	${COMPILER} ${FLAGS} $(OBJS) -o $(NAME)
 
-clean:	
-	rm -rf obj
+all: $(NAME)
+    
+fclean: clean
+	$(RM) $(NAME)
+    
+clean:
+	$(RM) -f $(OBJS) $(OBJS_B)
+    
+re: fclean all
 
-fclean:	clean
-	rm -f ${NAME}
-
-re:	fclean all
-
-.PHONY: all clean fclean re bonus
+.PHONY: all clean fclean re .cpp.o

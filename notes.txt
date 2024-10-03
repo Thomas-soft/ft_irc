@@ -1,0 +1,123 @@
+
+-1: Erreur stocké dans errno
+
+En suite nous avons besoin d'accepter les demandes de connexion d'un client, car lorsque celui-ci utilise connect() pour se connecter
+au server, il est placé en file d'attente.
+
+int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+
+sockfd: descripteur de fichier qu'on récupére avec notre fonction socket()
+serv_addr: pointeur vers la structure de données contenant les informations de connexion. sockaddr_in (IPv4) (si on ne souhaite pas recevoir IP&Port du client, on peut mettre NULL)
+addrlen: la longeur en octets de la structure mentionné avant. (mettre NULL, si c'est NULL avant)
+
+Le programme tourne en boucle jusqu'à détecter une connexion a cause de la fonction accept()
+
+Envoyer des données via socket:
+
+la fonction send() permet d'envoyé des données via une socket de type "stream" qui utilise TCP.
+
+ssize_t send(int socket, const void *buf, size_t len, int flags);
+
+socket: 
+Server: le fd du client qu'on aura recupéré via la fonction accept()
+Client: descripteur de fichier qu'on récupére avec notre fonction socket()
+
+buf: message a envoyé
+
+len : taille du message
+
+flags: un entier qui contient des flags concernant la transmission du message (dispo ici http://manpagesfr.free.fr/man/man2/send.2.html)
+
+
+Maintenant, nous souhaitons faire en sorte que notre serveur accepte plusieurs client en simultané. Car on peut croire que le serveur tourne
+à l'infini, mais en réalité, il reste bloqué sur la fonction "accept()" tant qu'un client ne se connecte pas. A la moindre connexion, le serveur se stop.
+
+Il y a des méthodes qui rendent nos sockets non-bloquantes et détecter quand elles sont prête à être utiliser.
+
+Rendre les sockets non-bloquantes avec fcntl()
+
+fcntl() de la library <unistd.h> et <fcntl.h>
+
+socket_fd = socket(PF_INET, SOCK_STREAM, 0); // création d'un socket
+fcntl(socket_fd, F_SETFL, O_NONBLOCK); // le socket n'est plus bloquant.
+
+Dans ce cas, les sockets ne sont plus bloquant, alors les appels fonction à recv(), ou accept() par exemple, renverront immédiamanet -1.
+
+On peut de cette manière boucler sur nos sockets une à une pour voir si elles ont des choses à dire, mais pas optimisé pour notre cpu. 
+Il y a des meilleures solution pour faire cela.
+
+Surveiller les sockets avec select()
+
+Notre but est de surveiller chaque socket et être avertis lorsque l'une d'entre elle est prête pour une opération. Si elle est prête, alors on l'execute
+
+C'est ce que fait la fonction select() ! il nous faudra importer <sys/select.h>, <sys/time.h>, <sys/types.h>, et <unistd.h>.
+
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+
+nfds: entier qui indique la valeur du plus grand descripteur de fichier à surveiller.
+readfds: ensemble de descripteurs de fichiers à surveiller pour la lecture, pour vérifier qu'un appel à write() ou recv() ne bloquera pas (peut être NULL)
+writefds ensemble de descripteurs de fichiers à surveiller pour l'écriture, pour vérifier qu'un appel à write() ou send() ne bloquera pas (peut être NULL)
+exceptfds: ensemble de descripteurs de fichiers à surveiller pour l'occurrence de condition d'exception. (Peut être NULL)
+timeout: un délai après lequel on force notre fonction select() à se stopper si aucun des FD ne changent d'état.
+
+select() return :
+
+-1: indique l'erreur dans errno
+0: Modifie chacun des sets pour indiquer quels fd sont prêts pour une opération. Elle renvoi aussi le nombre total de fd qui sont prêts parmi les trois ensembles.
+
+Pour manipuler les ensembles de fd que l'on veut surveiller avec select() , nous allons utiliser les macro suivant:
+
+void FD_CLR(int fd, fd_set *set);   // Retire un fd de l'ensemble
+int  FD_ISSET(int fd, fd_set *set); // Vérifie si un fd fait partie de l'ensemble
+void FD_SET(int fd, fd_set *set);   // Ajoute un fd à l'ensemble
+void FD_ZERO(fd_set *set);          // Met l'ensemble à 0
+
+Timeout de select()
+
+La structure à utiliser pour la valeur temporelle, timeval, se trouve dans <sys/time.h> :
+
+struct timeval {
+    long    tv_sec;    // secondes
+    long    tv_usec;   // microsecondes
+};
+
+Si cette valeur de temps est à 0, select() retournera immédiatement ; si on y met NULL, select() pourra bloquer indéfiniment si aucun des descripteurs de fichier ne changent d’état.
+
+La methode select() et en faites peu efficace. Il boucle sur le descripteur de fichier du serveur, des fd qui tentent d'ecrirent et des lirent.
+
+C'est pourquoi une alternative poll() qui utilise une structure a ete cree.
+
+poll() de la library poll.h
+
+int poll(struct pollfd fds[], nfds_t nfds, int timeout);
+
+fds: tableau de structure de type pollfd qui contient les fd qu'on souhaite surveiller
+nfds: entier qui represente le nombre d'element dans le tableau precedent
+timeout: 
+Valeur temporelle em ms durant laquelle poll() pourra bloquer l'execution de notre programne pour sonder les sockets
+-1: bloque indéfiniment la fonction poll() tant qu'un fd change d'etat
+0: la fonction poll() s'arrete meme si aucun fd change d'etat
+
+poll() return:
+Le nombre de descripteur de fichier ou un etat a ete change
+0: le timeout expire sans qu'aucun des fd est change
+-1: erreur stocke dans errno
+
+
+Structure pollfd():
+
+struct pollfd {
+    int   fd;         // Descripteur de fichier
+    short events;     // Événements attendus
+    short revents;    // Événements détectés
+};
+
+Nous aurons donc un tableau compose de plusieurs pollfd.
+
+events: evement attendu 
+- POLLIN attendre un fd pret a lire avec read() ou recv()
+- POLLOUT attendre un fd pret a ecrire avec write() ou send()
+
+Plusieurs autre evenement: http://manpagesfr.free.fr/man/man2/poll.2.html
+
+Quand poll() est termine, on pourra verifier revents de chaque element pour voir s'ils ont POLLIN ou POLLOUT
