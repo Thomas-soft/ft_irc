@@ -1,5 +1,7 @@
 #include "../includes/Server.hpp"
 
+bool _signal = false;
+
 Server::Server(int port, std::string pass) : _port(port), _pass(pass)
 {
 }
@@ -13,6 +15,12 @@ Server::~Server()
 // Server start and loop //
 // --------------------- //
 
+void	signalHandler(int signum)
+{
+	(void) signum;
+	_signal = true;
+}
+
 void    Server::start()
 {
     int opt = 1;
@@ -21,6 +29,7 @@ void    Server::start()
     _address.sin_addr.s_addr = INADDR_ANY;
     _address.sin_port = htons(_port);
     _server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	std::signal(SIGINT, signalHandler);
     if (_server_fd == -1)
         ft_exit("Server socket");
     if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) 
@@ -41,6 +50,8 @@ void    Server::start()
             ft_exit("Server poll");
         if (status == 0)
             continue ;
+		if (_signal)
+			ft_exit("Interruption signal");
         for (size_t i = 0; i < _pollfd.size(); i++)
         {
             if (_pollfd[i].revents & POLLIN)
@@ -197,15 +208,15 @@ std::string Server::get_pass() const
 void    Server::close_all_fd()
 {
     for (size_t i = 0; i < _pollfd.size(); i++)
-    {
         close(_pollfd[i].fd);
-    }
     close(_server_fd);
 }
 
 void    Server::ft_exit(std::string error)
 {
     perror(error.c_str());
-    close_all_fd();
+	_client.clear();
+	close_all_fd();
+	_pollfd.clear();
     exit(EXIT_FAILURE);
 }

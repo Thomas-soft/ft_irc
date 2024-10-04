@@ -12,6 +12,7 @@
 #include "Client.hpp"
 #include "Commands.hpp"
 #include "rpl.hpp"
+#include <csignal>
 
 #define SERVERNAME "ft_irc.com"
 
@@ -38,6 +39,7 @@ class Server
         void    start();
         void    accept_client();
         void    read_client(size_t i);
+		//void	signalHandler(int signum);
 
         // --------------------- //
         // Server parsing        //
