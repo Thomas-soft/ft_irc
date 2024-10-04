@@ -176,7 +176,7 @@ std::string Server::trim(std::string line)
 	size_t	last = line.find_last_not_of(" \t");
 
     if (last - first <= 0)
-        return ("");
+		return ("");
 	return (line.substr(first, last - first + 1));
 }
 

@@ -17,23 +17,33 @@
 
 #define RPL_ISUPPORT(servername, nickname) (std::string(":") + servername + " 005 " + nickname + " : The channels must begin with a '#'\r\nNicklen = 30\r\nChanModes = 'i','k','l','o','t'\r\n")
 
+// --------------------- //
+// SERVER RESPONSES      //
+// --------------------- //
+
+#define RPL_PING(servername) (std::string(":") + servername + " PONG :" + servername + "\r\n")
+
 
 // --------------------- //
 // ERROR RESPONSES       //
 // --------------------- //
 
-#define ERR_NOSUCHNICK(servername, nickname) ":" #servername " 401 " #nickname " :No such nick/channel\r\n"
+#define ERR_NOSUCHNICK(servername, nickname) (std::string(":") + servername + " 401 " + nickname + " :No such nick/channel\r\n")
 
-#define ERR_NOSUCHCHANNEL(servername, nickname, channel) ":" #servername " 403 " #nickname " " #channel " :No such channel\r\n"
+#define ERR_NOSUCHSERVER(servername, nickname) (std::string(":") + servername + " 402 " + nickname + " :No such server\r\n")
 
-#define ERR_NONICKNAMEGIVEN(servername, nickname) ":" #servername " 431 " #nickname " :No nickname given\r\n"
+#define ERR_NOSUCHCHANNEL(servername, nickname) (std::string(":") + servername + " 403 " + nickname + " :No such channel\r\n")
 
-#define ERR_ERRONEUSNICKNAME(servername, nickname) ":" #servername " 432 " #nickname " :Erroneus nickname\r\n"
+#define ERR_NOORIGIN(servername, nickname) (std::string(":") + servername + " 409 " + nickname + " :No origin specified\r\n")
 
-#define ERR_NICKNAMEINUSE(servername, nickname) ":" #servername " 433 " #nickname " :Nickname is already in use\r\n"
+#define ERR_NONICKNAMEGIVEN(servername, nickname) (std::string(":") + servername + " 431 " + nickname + " :No nickname given\r\n")
 
-#define ERR_NEEDMOREPARAMS(servername, nickname, cmd) ":" #servername " 461 " #nickname #cmd " :Not enough parameters\r\n"
+#define ERR_ERRONEUSNICKNAME(servername, nickname) (std::string(":") + servername + " 432 " + nickname + " :Erroneus nickname\r\n")
 
-#define ERR_ALREADYREGISTRED(servername, nickname) ":" #servername " 462 " #nickname " :You may not reregister\r\n"
+#define ERR_NICKNAMEINUSE(servername, nickname) (std::string(":") + servername + " 433 " + nickname + " :Nickname is already in use\r\n")
 
-#define ERR_PASSWDMISMATCH(servername, nickname) ":" #servername " 464 " #nickname " :Password incorrect\r\n"
+#define ERR_NEEDMOREPARAMS(servername, nickname, cmd) (std::string(":") + servername + " 461 " + nickname + cmd + " :Not enough parameters\r\n")
+
+#define ERR_ALREADYREGISTRED(servername, nickname) (std::string(":") + servername + " 462 " + nickname + " :You may not reregister\r\n")
+
+#define ERR_PASSWDMISMATCH(servername, nickname) (std::string(":") + servername + " 464 " + nickname + " :Password incorrect\r\n")

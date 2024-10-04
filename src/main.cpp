@@ -8,7 +8,7 @@ int ft_atoi(char *cPort)
     // Verifier si il contient que des chiffres
     for (size_t i = 0; i < port.size(); i++)
         if (!std::isdigit(port[i]))
-            return (EXIT_FAILURE);
+            return (-1);
     return (std::atoi(cPort));
 }
 

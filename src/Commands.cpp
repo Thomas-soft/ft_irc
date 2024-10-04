@@ -2,10 +2,10 @@
 
 void    execute_cmd(std::string cmd, std::vector<std::string> args, Server &server, Client &client)
 {
-    std::string cmd_func[] = {"PASS", "NICK", "USER"};
-    void    (*fun[])(std::vector<std::string> args, Server &server, Client &client) = {pass, nick, user};
+    std::string cmd_func[] = {"PASS", "NICK", "USER", "PING"};
+    void    (*fun[])(std::vector<std::string> args, Server &server, Client &client) = {pass, nick, user, ping};
 
-    for (size_t i = 0; i < 3; i++)
+    for (size_t i = 0; i < 4; i++)
     {
         if (cmd_func[i] == cmd)
             (*fun[i])(args, server, client);
@@ -106,4 +106,20 @@ void    user(std::vector<std::string> args, Server &server, Client &client)
     client.set_hostname("0");
     client.set_servername("*");
     client.set_realname(args[3]);
+}
+
+void    ping(std::vector<std::string> args, Server &server, Client &client)
+{
+	(void)args;
+	if (args.size() == 0)
+    {
+		server.send_to_client(client.get_fd(), ERR_NOORIGIN(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+    if (args[0] != SERVERNAME)
+    {
+        server.send_to_client(client.get_fd(), ERR_NOSUCHSERVER(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+	server.send_to_client(client.get_fd(), RPL_PING(SERVERNAME));
 }

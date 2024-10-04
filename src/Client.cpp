@@ -7,7 +7,6 @@ Client::Client(int fd, std::string nick, std::string user, std::string pass): _f
 
 Client::Client(int fd) : _fd(fd)
 {
-	std::memset(this, 0, sizeof(Client));
 	_password = "";
 	_nickname = "";
 	_username = "";
