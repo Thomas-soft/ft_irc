@@ -17,6 +17,10 @@ class Client
 	public:
 		Client(int fd, std::string nick, std::string user, std::string pass);
 		Client(int fd);
+
+		// --------------------- //
+		// Client getters        //
+		// --------------------- //
 		int	get_fd() const;
 		std::string get_password() const;
 		std::string get_nickname() const;
@@ -24,6 +28,10 @@ class Client
 		std::string get_hostname() const;
 		std::string get_servername() const;
 		std::string get_realname() const;
+
+		// --------------------- //
+		// Client setters        //
+		// --------------------- //
 		bool        is_registered() const;
 		void		set_password(std::string password);
 		void		set_nickname(std::string nickname);

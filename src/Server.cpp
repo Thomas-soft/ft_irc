@@ -95,15 +95,44 @@ void    Server::read_client(size_t i)
 
 void    Server::parse(char *buffer, Client &client)
 {
-    std::string cmd = "";
-    std::vector<std::string>    args;
-    std::stringstream   stream(buffer);
-    stream >> cmd;
-    std::string word = "";
-    std::stringstream   args_stream(stream.str().substr(cmd.size()));
-    while (args_stream >> word)
-        args.push_back(word);
-    execute_cmd(cmd, args, *this, client);
+    // execute_cmd(cmd, args, *this, client);
+    (void)buffer;
+    (void)client;
+
+    std::string         line = buffer;
+    std::vector<std::string>    lines;
+    size_t  start = 0;
+    size_t  end = 0;
+
+    while (line.find("\r\n", start) != std::string::npos)
+    {
+        end = line.find("\r\n", start);
+        if (end - start != 0)
+            lines.push_back(line.substr(start, end - start));
+        start = end + 2;
+    }
+    for (size_t i = 0; i < lines.size(); i++)
+    {
+        lines[i] = trim(lines[i]);
+        std::string cmd = "";
+        std::vector<std::string>    args;
+        std::stringstream   stream(lines[i]);
+        stream >> cmd;
+        if (cmd == "")
+            continue ;
+        std::string word = "";
+        std::stringstream   args_stream(stream.str().substr(cmd.size()));
+        while (args_stream >> word)
+            args.push_back(word);
+
+        // DISPLAY
+
+        std::cout << "cmd: " << "|" << cmd << "|" << std::endl;
+        for (size_t i = 0; i < args.size(); i++)
+            std::cout << "arg[" << i << "]: " << "|" << args[i] << "|" << std::endl;
+
+        execute_cmd(cmd, args, *this, client);
+    }
 }
 
 
@@ -139,6 +168,16 @@ bool    Server::is_nick_free(std::string nickname)
             return (false);
     }
     return (true);
+}
+
+std::string Server::trim(std::string line)
+{
+	size_t	first = line.find_first_not_of(" \t");
+	size_t	last = line.find_last_not_of(" \t");
+
+    if (last - first <= 0)
+        return ("");
+	return (line.substr(first, last - first + 1));
 }
 
 Client& Server::get_client(int fd)

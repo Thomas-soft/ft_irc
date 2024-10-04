@@ -50,6 +50,7 @@ class Server
         int		get_client_index(int fd);
         int     send_to_client(int fd, std::string msg);
         bool    is_nick_free(std::string nick);
+        std::string trim(std::string line);
         Client& get_client(int fd);
         std::string get_pass() const;
 
