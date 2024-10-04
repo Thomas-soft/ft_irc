@@ -8,6 +8,11 @@ Server::~Server()
 {
 }
 
+
+// --------------------- //
+// Server start and loop //
+// --------------------- //
+
 void    Server::start()
 {
     int opt = 1;
@@ -65,26 +70,13 @@ void    Server::accept_client()
     std::cout << "New client connected!" << std::endl;
 }
 
-int Server::get_client_fd(int fd)
-{
-	int i = 0;
-
-	while (i < (int)_client.size())
-	{
-		if (_client[i].get_fd() == fd)
-			return (i);
-		i++;
-	}
-	return (-1);
-}
-
 void    Server::read_client(size_t i)
 {
     char    buffer[512] = {0};
 
     if (recv(_pollfd[i].fd, buffer, sizeof(buffer), 0) <= 0)
     {
-		_client.erase(_client.begin() + get_client_fd(_pollfd[i].fd));
+		_client.erase(_client.begin() + get_client_index(_pollfd[i].fd));
         close(_pollfd[i].fd);
         _pollfd.erase(_pollfd.begin() + i);
         std::cout << "Client disconnected!" << std::endl;
@@ -92,26 +84,76 @@ void    Server::read_client(size_t i)
     else
     {
         std::cout << "Message from client (fd=" << _pollfd[i].fd << "): " << buffer << std::endl;
-        parse(buffer);
+        parse(buffer, this->get_client(_pollfd[i].fd));
     }
 }
 
-void    Server::parse(char *buffer)
+
+// --------------------- //
+// Server parsing        //
+// --------------------- //
+
+void    Server::parse(char *buffer, Client &client)
 {
     std::string cmd = "";
-    std::vector<std::string>    args_list;
+    std::vector<std::string>    args;
     std::stringstream   stream(buffer);
-
     stream >> cmd;
     std::string word = "";
     std::stringstream   args_stream(stream.str().substr(cmd.size()));
     while (args_stream >> word)
-        args_list.push_back(word);
-    // display args
-    for (size_t i = 0; i < args_list.size(); i++)
-        std::cout << "args[" << i << "] = " << args_list[i] << std::endl;
-    // execute_cmd(cmd, args, *this);
+        args.push_back(word);
+    execute_cmd(cmd, args, *this, client);
 }
+
+
+// --------------------- //
+// Server utils          //
+// --------------------- //
+
+int Server::get_client_index(int fd)
+{
+	for (size_t i = 0; i < _client.size(); i++)
+	{
+		if (_client[i].get_fd() == fd)
+			return (i);
+	}
+	return (EXIT_FAILURE);
+}
+
+int     Server::send_to_client(int fd, std::string msg)
+{
+    if (send(fd, msg.c_str(), msg.size(), 0) == -1)
+    {
+        perror("Server send");
+        return (EXIT_FAILURE);
+    }
+    return (EXIT_SUCCESS);
+}
+
+bool    Server::is_nick_free(std::string nickname)
+{
+    for (size_t i = 0; i < _client.size(); i++)
+    {
+        if (_client[i].get_nickname() == nickname)
+            return (false);
+    }
+    return (true);
+}
+
+Client& Server::get_client(int fd)
+{
+    return (_client[get_client_index(fd)]);
+}
+
+std::string Server::get_pass() const
+{
+    return (_pass);
+}
+
+// --------------------- //
+// Server exit           //
+// --------------------- //
 
 void    Server::close_all_fd()
 {

@@ -11,6 +11,9 @@
 #include <sstream>
 #include "Client.hpp"
 #include "Commands.hpp"
+#include "rpl.hpp"
+
+#define SERVERNAME "ft_irc.com"
 
 class Client;
 
@@ -28,11 +31,31 @@ class Server
     public:
         Server(int port, std::string pass);
         ~Server();
+
+        // --------------------- //
+        // Server start and loop //
+        // --------------------- //
         void    start();
         void    accept_client();
         void    read_client(size_t i);
-        void    parse(char *buffer);
-        int		get_client_fd(int fd);
-        void    close_all_fd();
+
+        // --------------------- //
+        // Server parsing        //
+        // --------------------- //
+        void    parse(char *buffer, Client &client);
+
+        // --------------------- //
+        // Server utils          //
+        // --------------------- //
+        int		get_client_index(int fd);
+        int     send_to_client(int fd, std::string msg);
+        bool    is_nick_free(std::string nick);
+        Client& get_client(int fd);
+        std::string get_pass() const;
+
+        // --------------------- //
+        // Server exit           //
+        // --------------------- //
         void    ft_exit(std::string error);
+        void    close_all_fd();
 };
