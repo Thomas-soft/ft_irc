@@ -148,8 +148,7 @@ MODE - Changer le mode du channel :
 — k : Définir/supprimer la clé du canal (mot de passe)
 — l : Définir/supprimer la limite d’utilisateurs pour le canal
 — o : Donner/retirer le privilège de l’opérateur de canal
-— t : Définir/supprimer les restrictions de la commande TOPIC pour les opé-
-rateurs de canaux
+— t : Définir/supprimer les restrictions de la commande TOPIC pour les opérateurs de canaux
 
 Attention:
 - Par defaut celui qui cree le channel est operator.
