@@ -391,7 +391,7 @@ void    invite(std::vector<std::string> args, Server &server, Client &client)
         return ;
     }
     // if invite only
-     if (channel.is)
+     if (channel->getInviteOnly())
 }
 
 
