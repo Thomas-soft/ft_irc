@@ -13,9 +13,13 @@
 #include "Commands.hpp"
 #include "rpl.hpp"
 #include <csignal>
+#include <map>
+#include "Channel.hpp"
 
 #define SERVERNAME "ft_irc.com"
 
+
+class Channel;
 class Client;
 
 class Server
@@ -27,6 +31,7 @@ class Server
         std::string _pass;
         std::vector<pollfd> _pollfd;
         std::vector<Client> _client;
+        std::vector<Channel>    _channel;
         Server();
 
     public:
@@ -53,9 +58,13 @@ class Server
         int     send_to_client(int fd, std::string msg);
         bool    is_nick_free(std::string nick);
         std::string trim(std::string line);
+        Channel*    channel_exists(std::string name);
+        Client*     client_exists(std::string name);
+        void    add_channel(Channel &channel);
+        void    add_client_to_channel(Client &client, std::string channelName);
         Client& get_client(int fd);
         std::string get_pass() const;
-
+		
         // --------------------- //
         // Server exit           //
         // --------------------- //

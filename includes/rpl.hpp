@@ -72,6 +72,7 @@
 
 #define ERR_TOOMANYTARGETS(servername, nickname) (std::string(":") + servername + " 407 " + nickname + " :Too many recipients\r\n")
 
+
 #define ERR_NOORIGIN(servername, nickname) (std::string(":") + servername + " 409 " + nickname + " :No origin specified\r\n")
 
 #define ERR_NORECIPIENT(servername, nickname) (std::string(":") + servername + " 411 " + nickname + " :No recipient given\r\n")
@@ -81,6 +82,8 @@
 #define ERR_NONICKNAMEGIVEN(servername, nickname) (std::string(":") + servername + " 431 " + nickname + " :No nickname given\r\n")
 
 #define ERR_ERRONEUSNICKNAME(servername, nickname) (std::string(":") + servername + " 432 " + nickname + " :Erroneus nickname\r\n")
+
+#define ERR_ALREADYONCHANNEL(servername, nickname) (std::string(":") + servername + " 443 " + nickname + " :You're already on that channel\r\n")
 
 #define ERR_NICKNAMEINUSE(servername, nickname) (std::string(":") + servername + " 433 " + nickname + " :Nickname is already in use\r\n")
 
@@ -101,3 +104,5 @@
 #define ERR_BADCHANMASK(servername, nickname) (std::string(":") + servername + " 476 " + nickname + " :Bad Channel Mask\r\n")
 
 #define ERR_USERONCHANNEL(servername, nickname) (std::string(":") + servername + " 477 " + nickname + " :User is already on channel\r\n")
+
+#define ERR_CHANOPRIVSNEEDED(servername, nickname) (std::string(":") + servername + " 482 " + nickname + " :You're not channel operator\r\n")

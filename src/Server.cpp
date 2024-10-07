@@ -115,12 +115,12 @@ void    Server::parse(char *buffer, Client &client)
     size_t  start = 0;
     size_t  end = 0;
 
-    while (line.find("\r\n", start) != std::string::npos)
+    while (line.find("\n", start) != std::string::npos)
     {
-        end = line.find("\r\n", start);
+        end = line.find("\n", start);
         if (end - start != 0)
             lines.push_back(line.substr(start, end - start));
-        start = end + 2;
+        start = end + 1;
     }
     for (size_t i = 0; i < lines.size(); i++)
     {
@@ -135,13 +135,32 @@ void    Server::parse(char *buffer, Client &client)
         std::stringstream   args_stream(stream.str().substr(cmd.size()));
         while (args_stream >> word)
             args.push_back(word);
-
+        for (size_t i = 0; i < args.size(); i++)
+        {
+            if (args[i][0] == ':')
+            {
+                size_t  begin = i;
+                std::string last_arg = "";
+                for (size_t j = i; j < args.size(); j++)
+                {
+                    if (j == begin)
+                        last_arg += args[j].substr(1);
+                    else
+                        last_arg += args[j];
+                    if (j + 1 < args.size())
+                        last_arg += " ";
+                }
+                args.erase(args.begin() + i, args.end());
+                args.push_back(last_arg);
+                break ;
+            }
+        }
         // DISPLAY
-
+		if (cmd[0] == '/')
+			cmd = cmd.substr(1, cmd.length() - 1);
         std::cout << "cmd: " << "|" << cmd << "|" << std::endl;
         for (size_t i = 0; i < args.size(); i++)
             std::cout << "arg[" << i << "]: " << "|" << args[i] << "|" << std::endl;
-
         execute_cmd(cmd, args, *this, client);
     }
 }
@@ -178,7 +197,7 @@ bool    Server::is_nick_free(std::string nickname)
         if (_client[i].get_nickname() == nickname)
             return (false);
     }
-    return (true);
+    return (true);  
 }
 
 std::string Server::trim(std::string line)
@@ -189,6 +208,43 @@ std::string Server::trim(std::string line)
     if (last - first <= 0)
 		return ("");
 	return (line.substr(first, last - first + 1));
+}
+
+Channel*    Server::channel_exists(std::string name)
+{
+    for (size_t i = 0; i < _channel.size(); i++)
+    {
+        if (_channel[i].getName() == name)
+            return (&_channel[i]);
+    }
+    return (NULL);
+}
+
+Client* Server::client_exists(std::string nickname)
+{
+    for (size_t i = 0; i < _client.size(); i++)
+    {
+        if (_client[i].get_nickname() == nickname)
+            return (&_client[i]);
+    }
+    return (NULL);
+}
+
+void    Server::add_channel(Channel& channel)
+{
+    _channel.push_back(channel);
+}
+
+void    Server::add_client_to_channel(Client& client, std::string channelName)
+{
+    for (size_t i = 0; i < _channel.size(); i++)
+    {
+        if (_channel[i].getName() == channelName)
+        {
+            _channel[i].add_client(client);
+            return ;
+        }
+    }
 }
 
 Client& Server::get_client(int fd)

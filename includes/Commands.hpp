@@ -11,3 +11,7 @@ void    pass(std::vector<std::string>, Server &server, Client &client);
 void    nick(std::vector<std::string>, Server &server, Client &client);
 void    user(std::vector<std::string>, Server &server, Client &client);
 void    ping(std::vector<std::string>, Server &server, Client &client);
+void    join(std::vector<std::string>, Server &server, Client &client);
+void    part(std::vector<std::string>, Server &server, Client &client);
+void    kick(std::vector<std::string>, Server &server, Client &client);
+void    privmsg(std::vector<std::string>, Server &server, Client &client);
