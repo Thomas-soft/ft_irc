@@ -14,6 +14,7 @@ private:
     bool _invite_only;
     size_t  _limit;
     Channel();
+
 public:
     Channel(std::string name);
     ~Channel();

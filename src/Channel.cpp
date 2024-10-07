@@ -82,19 +82,24 @@ bool    Channel::isClientOperator(int fd)
     return (false);
 }
 
- void    Channel::add_client(Client &client)
- {
+void    Channel::add_client(Client &client)
+{
     _client.push_back(client);
- }
+}
 
- void	Channel::removeClient(int fd)
- {
-	for (size_t i = 0; i < _client.size(); i++)
-	{
-		if (_client[i].get_fd() == fd)
-			_client.erase(_client.begin() + i);
-	}
- }
+void	Channel::removeClient(int fd)
+{
+    for (size_t i = 0; i < _client.size(); i++)
+    {
+        if (_client[i].get_fd() == fd)
+            _client.erase(_client.begin() + i);
+    }
+    for (size_t i = 0; i < _operator.size(); i++)
+    {
+        if (_operator[i].get_fd() == fd)
+            _operator.erase(_operator.begin() + i);
+    }
+}
 
 std::string    Channel::getAllNickname()
 {

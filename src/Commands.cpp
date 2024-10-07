@@ -2,10 +2,10 @@
 
 void    execute_cmd(std::string cmd, std::vector<std::string> args, Server &server, Client &client)
 {
-    std::string cmd_func[] = {"PASS", "NICK", "USER", "PING", "JOIN", "PART"};
-    void    (*fun[])(std::vector<std::string> args, Server &server, Client &client) = {pass, nick, user, ping, join, part};
+    std::string cmd_func[] = {"PASS", "NICK", "USER", "PING", "JOIN", "PART", "KICK", "PRIVMSG", "QUIT", "TOPIC", "INVITE"};
+    void    (*fun[])(std::vector<std::string> args, Server &server, Client &client) = {pass, nick, user, ping, join, part, kick, privmsg, quit, topic, invite};
 
-    for (size_t i = 0; i < 6; i++)
+    for (size_t i = 0; i < 11; i++)
     {
         if (cmd_func[i] == cmd)
             (*fun[i])(args, server, client);
@@ -223,8 +223,9 @@ void    part(std::vector<std::string> args, Server &server, Client &client)
         }
         // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL
         // SEND RPL TO CLIENT
-        // REMOVE CLIENT FROM CHANNEL
+        // REMOVE CLIENT FROM CHANNEL (and operators)
         c->removeClient(client.get_fd());
+        // REMOVE CHANNEL IF EMPTY
     }
 }
 
@@ -253,15 +254,25 @@ void    kick(std::vector<std::string> args, Server &server, Client &client)
     }
     // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL
     // SEND RPL TO CLIENT
-    // REMOVE CLIENT FROM CHANNEL
+    // REMOVE CLIENT FROM CHANNEL (and operators)
     channel->removeClient(client.get_fd());
 }
 
 void    privmsg(std::vector<std::string> args, Server &server, Client &client)
 {
-    if (args.size() < 2)
+    if (args.size() == 0)
     {
-        server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "PRIVMSG"));
+        server.send_to_client(client.get_fd(), ERR_NORECIPIENT(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+    if (args.size() == 1)
+    {
+        if (args[0][0] == ':')
+        {
+            server.send_to_client(client.get_fd(), ERR_NORECIPIENT(SERVERNAME, client.get_nickname()));
+            return ;
+        }
+        server.send_to_client(client.get_fd(), ERR_NOTEXTTOSEND(SERVERNAME, client.get_nickname()));
         return ;
     }
     std::stringstream           stream_channel(args[0]);
@@ -301,3 +312,87 @@ void    privmsg(std::vector<std::string> args, Server &server, Client &client)
         }
     }
 }
+
+void    quit(std::vector<std::string> args, Server &server, Client &client)
+{
+    (void)args;
+    (void)server;
+    (void)client;
+    // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL
+    // REMOVE CLIENT FROM CHANNEL (channel>clients, channel>operators)
+    // REMOVE CLIENT FROM SERVER (pollfd, client)
+}
+
+void    topic(std::vector<std::string> args, Server &server, Client &client)
+{
+    if (args.size() < 1)
+    {
+        server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "TOPIC"));
+        return ;
+    }
+    Channel *channel = server.channel_exists(args[0]);
+    if (channel == NULL)
+    {
+        server.send_to_client(client.get_fd(), ERR_NOSUCHCHANNEL(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+    if (channel->isClientInChannel(client.get_fd()) == false)
+    {
+        server.send_to_client(client.get_fd(), ERR_NOTONCHANNEL(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+    if (args.size() == 1)
+    {
+        if (channel->getTopic() == "")
+        {
+            server.send_to_client(client.get_fd(), RPL_NOTOPIC(SERVERNAME, client.get_nickname(), channel->getName()));
+            return ;
+        }
+        server.send_to_client(client.get_fd(), RPL_TOPIC(SERVERNAME, client.get_nickname(), channel->getName(), channel->getTopic()));
+        return ;
+    }
+    if (channel->isClientOperator(client.get_fd()) == false && channel->getTopicSet() == false)
+    {
+        server.send_to_client(client.get_fd(), ERR_CHANOPRIVSNEEDED(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+    // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL
+    // SEND RPL TO CLIENT
+    // SET NEW TOPIC
+}
+
+void    invite(std::vector<std::string> args, Server &server, Client &client)
+{
+    if (args.size() < 2)
+    {
+        server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "INVITE"));
+        return ;
+    }
+    Client *c = server.client_exists(args[0]);
+    if (c == NULL)
+    {
+        server.send_to_client(client.get_fd(), ERR_NOSUCHNICK(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+    Channel *channel = server.channel_exists(args[1]);
+    if (channel == NULL)
+    {
+        server.send_to_client(client.get_fd(), ERR_NOSUCHCHANNEL(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+    if (channel->isClientInChannel(client.get_fd()) == false)
+    {
+        server.send_to_client(client.get_fd(), ERR_NOTONCHANNEL(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+    if (channel->isClientOperator(client.get_fd()) == false)
+    {
+        server.send_to_client(client.get_fd(), ERR_CHANOPRIVSNEEDED(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+    // if invite only
+     if (channel.is)
+}
+
+
+// DANS JOIN NE PAS OUBLIER LA LIMITE DU CHANNEL SI ELLE N'EST PAS A 0

@@ -15,3 +15,6 @@ void    join(std::vector<std::string>, Server &server, Client &client);
 void    part(std::vector<std::string>, Server &server, Client &client);
 void    kick(std::vector<std::string>, Server &server, Client &client);
 void    privmsg(std::vector<std::string>, Server &server, Client &client);
+void    quit(std::vector<std::string>, Server &server, Client &client);
+void    topic(std::vector<std::string>, Server &server, Client &client);
+void    invite(std::vector<std::string>, Server &server, Client &client);
