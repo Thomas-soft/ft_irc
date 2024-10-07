@@ -201,6 +201,7 @@ std::string Server::get_pass() const
     return (_pass);
 }
 
+
 // --------------------- //
 // Server exit           //
 // --------------------- //

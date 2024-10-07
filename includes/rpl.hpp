@@ -26,9 +26,9 @@
 
 #define RPL_NOTOPIC(servername, nickname, channel) (std::string(":") + servername + " 331 " + nickname + " " + channel + " :No topic is set\r\n")
 
-#define RPL_TOPIC(servername, nickname, channel, topic) (std::string(":") + servername + " 332 " + nickname + " " + channel + " :" + topic + "\r\n")
-
 #define RPL_INVITING(servername, nickname, channel, allNicknames) (std::string(":") + servername + " 341 " + nickname + " " + allNicknames + " " + channel + "\r\n")
+
+#define RPL_TOPIC(servername, nickname, channel, topic) (std::string(":") + servername + " 332 " + nickname + " " + channel + " :" + topic + "\r\n")
 
 #define RPL_NAMREPLY(servername, nickname, channel, allNicknames) (std::string(":") + servername + " 353 " + nickname + " = " + channel + " :" + allNicknames + "\r\n")
 
