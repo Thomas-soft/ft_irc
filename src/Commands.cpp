@@ -2,13 +2,19 @@
 
 void    execute_cmd(std::string cmd, std::vector<std::string> args, Server &server, Client &client)
 {
-    std::string cmd_func[] = {"PASS", "NICK", "USER", "PING", "JOIN", "PART", "KICK", "PRIVMSG", "QUIT", "TOPIC", "INVITE"};
+    std::string cmd_func[] = {"PING", "JOIN", "PART", "KICK", "PRIVMSG", "QUIT", "TOPIC", "INVITE"};
+	std::string cmd_func_unregistred[] = {"PASS", "NICK", "USER"};
     void    (*fun[])(std::vector<std::string> args, Server &server, Client &client) = {pass, nick, user, ping, join, part, kick, privmsg, quit, topic, invite};
 
-    for (size_t i = 0; i < 11; i++)
+    for (size_t i = 0; i < 3; i++)
     {
-        if (cmd_func[i] == cmd)
+        if (cmd_func_unregistred[i] == cmd)
             (*fun[i])(args, server, client);
+    }
+    for (size_t i = 0; i < 8; i++)
+    {
+        if (client.is_registered() && cmd_func[i] == cmd)
+            (*fun[i + 3])(args, server, client);
     }
     if (client.is_registered() == false
         && client.get_password() != ""
@@ -318,6 +324,9 @@ void    quit(std::vector<std::string> args, Server &server, Client &client)
     (void)args;
     (void)server;
     (void)client;
+
+	std::cout << "hey" << std::endl;
+	server.remove_client(client.get_fd());
     // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL
     // REMOVE CLIENT FROM CHANNEL (channel>clients, channel>operators)
     // REMOVE CLIENT FROM SERVER (pollfd, client)
@@ -391,7 +400,7 @@ void    invite(std::vector<std::string> args, Server &server, Client &client)
         return ;
     }
     // if invite only
-     if (channel->getInviteOnly())
+    // if (channel->getInviteOnly())
 }
 
 

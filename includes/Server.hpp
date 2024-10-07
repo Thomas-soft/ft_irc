@@ -60,6 +60,7 @@ class Server
         std::string trim(std::string line);
         Channel*    channel_exists(std::string name);
         Client*     client_exists(std::string name);
+		void	remove_client(int fd);
         void    add_channel(Channel &channel);
         void    add_client_to_channel(Client &client, std::string channelName);
         Client& get_client(int fd);

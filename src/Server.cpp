@@ -170,6 +170,20 @@ void    Server::parse(char *buffer, Client &client)
 // Server utils          //
 // --------------------- //
 
+void	Server::remove_client(int fd)
+{
+	size_t i = 0;
+
+	while (i < _client.size())
+	{
+		if (_client[i].get_fd() == fd)
+			_client.erase(_client.begin() + i);
+		if (_pollfd[i + 1].fd == fd)
+			_pollfd.erase(_pollfd.begin() + i);
+		i++;
+	}
+}
+
 int Server::get_client_index(int fd)
 {
 	for (size_t i = 0; i < _client.size(); i++)
