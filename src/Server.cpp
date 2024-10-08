@@ -170,6 +170,18 @@ void    Server::parse(char *buffer, Client &client)
 // Server utils          //
 // --------------------- //
 
+void Server::remove_channel(std::string name)
+{
+    for (size_t i = 0; i < _channel.size(); i++)
+    {
+        if (_channel[i].getName() == name)
+        {
+            _channel.erase(_channel.begin() + i);
+            return ;
+        }
+    }
+}
+
 void	Server::remove_client(int fd)
 {
 	size_t i = 0;

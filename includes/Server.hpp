@@ -65,6 +65,7 @@ class Server
         void    add_client_to_channel(Client &client, std::string channelName);
         Client& get_client(int fd);
         std::string get_pass() const;
+        void remove_channel(std::string name);
 		
         // --------------------- //
         // Server exit           //

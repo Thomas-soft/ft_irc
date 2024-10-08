@@ -44,4 +44,5 @@ public:
     bool    isClientOperator(int fd);
     void    add_client(Client &client);
     Client* getKickTarget(const std::string &nickname);
+    bool    isEmpty();
 };

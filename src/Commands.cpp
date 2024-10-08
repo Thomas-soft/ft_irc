@@ -174,6 +174,7 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
             server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), c->getName(), c->getAllNickname()));
             server.send_to_client(client.get_fd(), RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), c->getName()));
             
+            std::cout << "new user" << std::endl;
             // mis à jour le send_to_server par Dylan. vérifier si c'est bon
             std::vector<Client> clients = c->getAllClients();
             for (size_t i = 0; i < clients.size(); i++)
@@ -230,9 +231,13 @@ void    part(std::vector<std::string> args, Server &server, Client &client)
         }
         // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL
         // SEND RPL TO CLIENT
+        // server.send_to_client(client.get_fd(), RPL_PART(SERVERNAME, client.get_nickname(), c->getName()));  
         // REMOVE CLIENT FROM CHANNEL (and operators)
         c->removeClient(client.get_fd());
-        // REMOVE CHANNEL IF EMPTY
+
+        // remove channel if empty
+        if (c->isEmpty())
+            server.remove_channel(c->getName());
     }
 }
 

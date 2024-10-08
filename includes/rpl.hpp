@@ -106,3 +106,6 @@
 #define ERR_USERONCHANNEL(servername, nickname) (std::string(":") + servername + " 477 " + nickname + " :User is already on channel\r\n")
 
 #define ERR_CHANOPRIVSNEEDED(servername, nickname) (std::string(":") + servername + " 482 " + nickname + " :You're not channel operator\r\n")
+
+#define RPL_PART(servername, nickname, channel) (std::string(":") + servername + " PART " + nickname + " " + channel + " :Leave\r\n")
+

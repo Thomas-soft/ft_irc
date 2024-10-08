@@ -139,3 +139,10 @@ Client* Channel::getKickTarget(const std::string &nickname)
     }
     return NULL;
 }
+
+bool   Channel::isEmpty()
+{
+    if (_client.size() == 0)
+        return (true);
+    return false;
+}
