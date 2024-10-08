@@ -18,19 +18,30 @@ private:
 public:
     Channel(std::string name);
     ~Channel();
+    // ---------------------- //
+	//   Channel setter       //
+	// ---------------------- //
+	void    setTopic(std::string topic);
+    void    setKey(std::string key);
+    void    setName(std::string name);
+    void    setOperator(Client& client);
+    std::vector<Client> getAllClients() const;
+    std::string    getAllNickname();
+    // ---------------------- //
+	//   Channel getters      //
+	// ---------------------- //
     std::string getName() const;
     std::string getKey() const;
 	std::string getTopic() const;
     bool    getTopicSet() const;
     bool    getInviteOnly() const;
     size_t  getLimit() const;
+    // ---------------------- //
+	//   Other function       //
+	// ---------------------- //
 	void	removeClient(int fd);
-	void    setTopic(std::string topic);
-    void    setKey(std::string key);
-    void    setName(std::string name);
-    void    setOperator(Client& client);
     bool    isClientInChannel(int fd);
     bool    isClientOperator(int fd);
     void    add_client(Client &client);
-    std::string    getAllNickname();
+    Client* getKickTarget(const std::string &nickname);
 };

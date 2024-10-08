@@ -173,10 +173,11 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
             server.send_to_client(client.get_fd(), RPL_NOTOPIC(SERVERNAME, client.get_nickname(), c->getName()));
             server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), c->getName(), c->getAllNickname()));
             server.send_to_client(client.get_fd(), RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), c->getName()));
-
-
-            // TU ENVOI CA A CHAQUE CLIENTS DU CHANNEL Y COMPRIS LE NOUVEAU UTILISATEUR
-            // server.send_to_client(client.get_fd(), JOIN_NOTIFY(SERVERNAME, ....);
+            
+            // mis à jour le send_to_server par Dylan. vérifier si c'est bon
+            std::vector<Client> clients = c->getAllClients();
+            for (size_t i = 0; i < clients.size(); i++)
+                server.send_to_client(clients[i].get_fd(), JOIN_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName()));
 
         }
         else
@@ -258,6 +259,17 @@ void    kick(std::vector<std::string> args, Server &server, Client &client)
         server.send_to_client(client.get_fd(), ERR_CHANOPRIVSNEEDED(SERVERNAME, client.get_nickname()));
         return ;
     }
+    // mis à jour le send_to_server par Dylan. vérifier si c'est bon
+    Client *target = channel->getKickTarget(args[1]);
+    if (target == NULL)
+    {
+        server.send_to_client(client.get_fd(), ERR_NOSUCHNICK(SERVERNAME, client.get_nickname()));
+        return ;
+    }
+    
+    std::vector<Client> clients = channel->getAllClients();
+    for (size_t i = 0; i < clients.size(); i++)
+        server.send_to_client(clients[i].get_fd(), KICK_NOTIFY(clients[i].get_nickname(), clients[i].get_username(), clients[i].get_hostname(), channel->getName(), target->get_nickname(), args[2]));
     // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL
     // SEND RPL TO CLIENT
     // REMOVE CLIENT FROM CHANNEL (and operators)

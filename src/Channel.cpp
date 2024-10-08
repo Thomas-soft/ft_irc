@@ -124,3 +124,18 @@ std::string    Channel::getAllNickname()
     }
     return (allNickname);
 }
+
+std::vector<Client> Channel::getAllClients() const
+{
+    return this->_client;
+}
+
+Client* Channel::getKickTarget(const std::string &nickname)
+{
+    for (size_t i = 0; i < _client.size(); i++)
+    {
+        if (_client[i].get_nickname() == nickname)
+            return &_client[i];
+    }
+    return NULL;
+}
