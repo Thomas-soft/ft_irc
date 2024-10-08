@@ -132,13 +132,16 @@ void    ping(std::vector<std::string> args, Server &server, Client &client)
 
 void    join(std::vector<std::string> args, Server &server, Client &client)
 {
-    if (args.size() < 2)
+    if (args.size() < 1)
     {
         server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "JOIN"));
         return ;
     }
     std::stringstream   stream_channel(args[0]);
-    std::stringstream   stream_key(args[1]);
+    std::string keys = "";
+    if (args.size() > 1)
+        keys = args[1];
+    std::stringstream   stream_key(keys);
     std::vector<std::string>    channel;
     std::vector<std::string>    key;
     std::string                 token = "";
@@ -159,26 +162,26 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
         {
             server.send_to_client(client.get_fd(), ERR_BADCHANMASK(SERVERNAME, client.get_nickname()));
         }
-        channel[i] = channel[i].substr(1); // Enleve le #
         Channel *c = server.channel_exists(channel[i]);
         if (c == NULL)
         {
             // Create channel
-            c->setName(channel[i]);
+            Channel new_channel(channel[i]);
             if (key.size() > i)
-                c->setKey(key[i]);
-            c->setOperator(client);
-            server.add_channel(*c);
-            c->add_client(client);
-            server.send_to_client(client.get_fd(), RPL_NOTOPIC(SERVERNAME, client.get_nickname(), c->getName()));
-            server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), c->getName(), c->getAllNickname()));
-            server.send_to_client(client.get_fd(), RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), c->getName()));
-            
-            std::cout << "new user" << std::endl;
+                new_channel.setKey(key[i]);
+            new_channel.setOperator(client);
+            new_channel.add_client(client);
+            server.send_to_client(client.get_fd(), RPL_NOTOPIC(SERVERNAME, client.get_nickname(),  new_channel.getName()));
+            server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), new_channel.getName(), new_channel.getAllNickname()));
+            server.send_to_client(client.get_fd(), RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), new_channel.getName()));
+            server.add_channel(new_channel);
+            //std::cout << RPL_NOTOPIC(SERVERNAME, client.get_nickname(), new_channel.getName()) << "|" << std::endl;
+            //std::cout << RPL_NAMREPLY(SERVERNAME, client.get_nickname(), new_channel.getName(), new_channel.getAllNickname()) << std::endl;
+            //std::cout << RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), new_channel.getName()) << std::endl;
             // mis à jour le send_to_server par Dylan. vérifier si c'est bon
-            std::vector<Client> clients = c->getAllClients();
-            for (size_t i = 0; i < clients.size(); i++)
-                server.send_to_client(clients[i].get_fd(), JOIN_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName()));
+            // std::vector<Client> clients = c->getAllClients();
+            // for (size_t i = 0; i < clients.size(); i++)
+            //     server.send_to_client(clients[i].get_fd(), JOIN_NOTIFY(client[].get_nickname(), client.get_username(), client.get_hostname(), c->getName()));
 
         }
         else
@@ -194,7 +197,7 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
             {
                 // Add client to channel
                 // server.add_client_to_channel(client, channel[i]);
-                if (c->isClientInChannel(client.get_fd()) == true)
+                if (c->isClientInChannel(client.get_fd()) == false)
                 {
                     c->add_client(client);
                     // RPL + NOTIFY
@@ -214,8 +217,9 @@ void    part(std::vector<std::string> args, Server &server, Client &client)
     std::stringstream   stream_channel(args[0]);
     std::vector<std::string>    channel;
     std::string                 token;
-    while (std::getline(stream_channel, token, ','))
-        channel.push_back(token);
+
+	while (std::getline(stream_channel, token, ','))
+		channel.push_back(token);
     for (size_t i = 0; i < channel.size(); i++)
     {
         Channel *c = server.channel_exists(channel[i]);
@@ -231,13 +235,18 @@ void    part(std::vector<std::string> args, Server &server, Client &client)
         }
         // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL
         // SEND RPL TO CLIENT
-        // server.send_to_client(client.get_fd(), RPL_PART(SERVERNAME, client.get_nickname(), c->getName()));  
-        // REMOVE CLIENT FROM CHANNEL (and operators)
-        c->removeClient(client.get_fd());
-
         // remove channel if empty
+        c->removeClient(client.get_fd());
         if (c->isEmpty())
             server.remove_channel(c->getName());
+		else
+			c->sendQuitMessage(server, client.get_fd());
+		//std::cout << RPL_PART(client.get_nickname(), client.get_username(), "127.0.0.1", c->getName()) << std::endl;
+        server.send_to_client(client.get_fd(), RPL_PART(client.get_nickname(), client.get_username(), "127.0.0.1", c->getName()));
+        //std::cout << PART_NOTIFY(client.get_nickname(), client.get_username(), "localhost", c->getName(), "Goodbye!") << std::endl;
+        // server.send_to_client(client.get_fd(), RPL_PART(SERVERNAME, client.get_nickname(), c->getName()));  
+        // REMOVE CLIENT FROM CHANNEL (and operators)
+        // display all clients in channel
     }
 }
 
@@ -308,7 +317,7 @@ void    privmsg(std::vector<std::string> args, Server &server, Client &client)
     {
         if (target[i][0] == '#')
         {
-            Channel *channel = server.channel_exists(target[i].substr(1));
+            Channel *channel = server.channel_exists(target[i]);
             if (channel == NULL)
             {
                 server.send_to_client(client.get_fd(), ERR_NOSUCHCHANNEL(SERVERNAME, client.get_nickname()));

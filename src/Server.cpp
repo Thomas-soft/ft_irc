@@ -97,6 +97,18 @@ void    Server::read_client(size_t i)
         std::cout << "Message from client (fd=" << _pollfd[i].fd << "): " << buffer << std::endl;
         parse(buffer, this->get_client(_pollfd[i].fd));
     }
+	if (_client.size())
+		std::cout << "\nTous les clients" << std::endl;
+	for (size_t i = 0; i < _client.size(); i++)
+	{
+		std::cout << "Client " << i << ": " << _client[i].get_nickname() << std::endl;
+	}
+	if (_channel.size())
+		std::cout << "\nTous les channel" << std::endl;
+	for (size_t i = 0; i < _channel.size(); i++)
+	{
+		std::cout << "Channel " << i << ": " << _channel[i].getName() << " avec " << _channel[i].getAllClients().size() << " clients" << std::endl;
+	}
 }
 
 

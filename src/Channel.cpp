@@ -146,3 +146,19 @@ bool   Channel::isEmpty()
         return (true);
     return false;
 }
+
+void    Channel::sendQuitMessage(Server &server, int fd)
+{
+    size_t i = 0;
+
+	while (i < _client.size())
+	{
+		if (_client[i].get_fd() != fd)
+		{
+			server.send_to_client(_client[i].get_fd(), PART_NOTIFY(_client[i].get_nickname(), _client[i].get_username(), "ft_irc.com", _name, "Goodbye!"));
+			//server.send_to_client();
+			//SEND MESSAGE TO ALL
+		}
+		i++;
+	}
+}

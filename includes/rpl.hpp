@@ -41,7 +41,7 @@
 
 #define JOIN_NOTIFY(nickname, username, hostname, channel) (std::string(":") + nickname + "!" + username + "@" + hostname + " JOIN :" + channel + "\r\n")
 
-#define PART_NOTIFY(nickname, username, hostname, channel) (std::string(":") + nickname + "!" + username + "@" + hostname + " PART :" + channel + "\r\n")
+#define PART_NOTIFY(nickname, username, hostname, channel, reason) (std::string(":") + nickname + "!" + username + "@" + hostname + " PART " + channel + " :" + reason + "\r\n")
 
 #define QUIT_NOTIFY(nickname, username, hostname, reason) (std::string(":") + nickname + "!" + username + "@" + hostname + " QUIT :" + reason + "\r\n")
 
@@ -107,5 +107,5 @@
 
 #define ERR_CHANOPRIVSNEEDED(servername, nickname) (std::string(":") + servername + " 482 " + nickname + " :You're not channel operator\r\n")
 
-#define RPL_PART(servername, nickname, channel) (std::string(":") + servername + " PART " + nickname + " " + channel + " :Leave\r\n")
+#define RPL_PART(nickname, username, hostname, channel) (std::string(":") + nickname + "!" + username + "@" + hostname + " PART "  + channel + "\r\n")
 

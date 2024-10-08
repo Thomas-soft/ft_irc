@@ -2,6 +2,8 @@
 
 #include "Server.hpp"
 
+class Server;
+
 class Channel
 {
 private:
@@ -40,6 +42,7 @@ public:
 	//   Other function       //
 	// ---------------------- //
 	void	removeClient(int fd);
+	void	sendQuitMessage(Server &server, int fd);
     bool    isClientInChannel(int fd);
     bool    isClientOperator(int fd);
     void    add_client(Client &client);
