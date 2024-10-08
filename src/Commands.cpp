@@ -179,9 +179,6 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
             //std::cout << RPL_NAMREPLY(SERVERNAME, client.get_nickname(), new_channel.getName(), new_channel.getAllNickname()) << std::endl;
             //std::cout << RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), new_channel.getName()) << std::endl;
             // mis à jour le send_to_server par Dylan. vérifier si c'est bon
-            // std::vector<Client> clients = c->getAllClients();
-            // for (size_t i = 0; i < clients.size(); i++)
-            //     server.send_to_client(clients[i].get_fd(), JOIN_NOTIFY(client[].get_nickname(), client.get_username(), client.get_hostname(), c->getName()));
 
         }
         else
@@ -200,7 +197,10 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
                 if (c->isClientInChannel(client.get_fd()) == false)
                 {
                     c->add_client(client);
-                    // RPL + NOTIFY
+                    // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL à vérif
+                    std::vector<Client> clients = c->getAllClients();
+                    for (size_t i = 0; i < clients.size(); i++)
+                        server.send_to_client(clients[i].get_fd(), JOIN_NOTIFY(clients[i].get_nickname(), clients[i].get_username(), clients[i].get_hostname(), c->getName()));
                 }
             }
         }
@@ -354,6 +354,7 @@ void    quit(std::vector<std::string> args, Server &server, Client &client)
 	std::cout << "hey" << std::endl;
 	server.remove_client(client.get_fd());
     // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL
+    server.send_to_client(client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), "Goodbye!"));
     // REMOVE CLIENT FROM CHANNEL (channel>clients, channel>operators)
     // REMOVE CLIENT FROM SERVER (pollfd, client)
 }
@@ -428,6 +429,5 @@ void    invite(std::vector<std::string> args, Server &server, Client &client)
     // if invite only
     // if (channel->getInviteOnly())
 }
-
 
 // DANS JOIN NE PAS OUBLIER LA LIMITE DU CHANNEL SI ELLE N'EST PAS A 0

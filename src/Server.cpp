@@ -201,10 +201,12 @@ void	Server::remove_client(int fd)
 	while (i < _client.size())
 	{
 		if (_client[i].get_fd() == fd)
+        {
 			_client.erase(_client.begin() + i);
-		if (_pollfd[i + 1].fd == fd)
-			_pollfd.erase(_pollfd.begin() + i);
-		i++;
+			_pollfd.erase(_pollfd.begin() + i + 1);
+        }
+        else
+		    i++;
 	}
 }
 
