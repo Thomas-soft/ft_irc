@@ -28,6 +28,9 @@ public:
     void    setKey(std::string key);
     void    setName(std::string name);
     void    setOperator(Client& client);
+    void    setUser(Client& client);
+    void    setInviteOnly(bool inviteOnly);
+    void    setLimit(size_t newLimit); 
     std::vector<Client> getAllClients() const;
     std::string    getAllNickname();
 
@@ -51,4 +54,5 @@ public:
     void    add_client(Client &client);
     Client* getKickTarget(const std::string &nickname);
     bool    isEmpty();
+    void    setTopicSet(bool topic_set);
 };

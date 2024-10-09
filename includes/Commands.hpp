@@ -18,3 +18,4 @@ void    privmsg(std::vector<std::string>, Server &server, Client &client);
 void    quit(std::vector<std::string>, Server &server, Client &client);
 void    topic(std::vector<std::string>, Server &server, Client &client);
 void    invite(std::vector<std::string>, Server &server, Client &client);
+void    mode(std::vector<std::string> args, Server &server, Client &client);

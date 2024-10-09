@@ -97,7 +97,7 @@
 
 #define ERR_CHANNELISFULL(servername, nickname) (std::string(":") + servername + " 471 " + nickname + " :Cannot join channel (+l)\r\n")
 
-#define ERR_INVITEONLYCHAN(servername, nickname) (std::string(":") + servername + " 473 " + nickname + " :Cannot join channel (+i)\r\n")
+#define ERR_INVITEONLYCHAN(servername, nickname) (std::string(":") + servername + " 473 " + nickname + "\r\n")
 
 #define ERR_BADCHANNELKEY(servername, nickname) (std::string(":") + servername + " 475 " + nickname + " :Cannot join channel (+k)\r\n")
 
@@ -106,6 +106,8 @@
 #define ERR_USERONCHANNEL(servername, nickname) (std::string(":") + servername + " 477 " + nickname + " :User is already on channel\r\n")
 
 #define ERR_CHANOPRIVSNEEDED(servername, nickname) (std::string(":") + servername + " 482 " + nickname + " :You're not channel operator\r\n")
+
+#define ERR_UNKNOWNMODE(servername, nickname) (std::string(":") + servername + " 472 " + nickname + "\r\n")
 
 #define RPL_PART(nickname, username, hostname, channel) (std::string(":") + nickname + "!" + username + "@" + hostname + " PART "  + channel + "\r\n")
 

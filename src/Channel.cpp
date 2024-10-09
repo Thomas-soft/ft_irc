@@ -42,6 +42,16 @@ size_t  Channel::getLimit() const
     return (_limit);
 }
 
+void  Channel::setLimit(size_t newLimit) 
+{
+    _limit = newLimit;
+}
+
+void Channel::setInviteOnly(bool inviteOnly)
+{
+    _invite_only = inviteOnly;
+}
+
 void    Channel::setTopic(std::string topic)
 {
     _topic = topic;
@@ -55,6 +65,19 @@ void    Channel::setKey(std::string key)
 void    Channel::setOperator(Client& client)
 {
     _operator.push_back(client);
+}
+
+void    Channel::setUser(Client& client)
+{
+    for (std::vector<Client>::iterator it = _operator.begin(); it != _operator.end(); it++)
+    {
+        if (it->get_fd() == client.get_fd())
+        {
+            _operator.erase(it);
+            break ;
+        }
+    }
+    _client.push_back(client);
 }
 
 void    Channel::setName(std::string name)
@@ -159,4 +182,9 @@ void    Channel::sendNotifToAllClients(Server &server, int fd, std::string messa
         }
 		i++;
 	}
+}
+
+void Channel::setTopicSet(bool topic_set)
+{
+    _topic_set = topic_set;
 }

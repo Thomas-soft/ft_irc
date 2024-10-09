@@ -13,6 +13,7 @@
 #include "Commands.hpp"
 #include "rpl.hpp"
 #include <csignal>
+#include <algorithm>
 #include <map>
 #include "Channel.hpp"
 
