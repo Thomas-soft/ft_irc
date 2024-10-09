@@ -66,6 +66,9 @@ class Server
         Client& get_client(int fd);
         std::string get_pass() const;
         void remove_channel(std::string name);
+        void delete_client(int fd);
+        void delete_poll_client(int fd);
+        std::vector<Channel>& getAllChannels();
 		
         // --------------------- //
         // Server exit           //

@@ -320,3 +320,32 @@ void    Server::ft_exit(std::string error)
 	_pollfd.clear();
     exit(EXIT_FAILURE);
 }
+
+void Server::delete_client(int fd)
+{
+    for (size_t i = 0; i < _client.size(); i++)
+    {
+        if (_client[i].get_fd() == fd)
+        {
+            _client.erase(_client.begin() + i);
+            return ;
+        }
+    }
+}
+
+void Server::delete_poll_client(int fd)
+{
+    for (size_t i = 0; i < _pollfd.size(); i++)
+    {
+        if (_pollfd[i].fd == fd)
+        {
+            _pollfd.erase(_pollfd.begin() + i);
+            return ;
+        }
+    }
+}
+
+std::vector<Channel>& Server::getAllChannels()
+{
+    return _channel;
+}

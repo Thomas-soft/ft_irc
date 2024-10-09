@@ -345,21 +345,29 @@ void    privmsg(std::vector<std::string> args, Server &server, Client &client)
 }
 
 void    quit(std::vector<std::string> args, Server &server, Client &client)
-{
-    (void)args;
-    (void)server;
-    (void)client;
-
-    // A FAIRE
-    // REMOVE LES CLIENTS DE :
-    // server : _pollfd, _client
-    // tout les channel : _client, _operator
-    // CA ENVOI LA NOTIF A TOUT LE MONDE DANS CHAQUE CHANNEL
-	server.remove_client(client.get_fd());
-    if (args.size() > 0)
-        server.send_to_client(client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]));
-    else
-        server.send_to_client(client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), "Goodbye!"));
+{    
+    std::vector<Channel> &channels = server.getAllChannels();
+    std::vector<Channel>::iterator it;
+    for (it = channels.begin(); it != channels.end();)
+    {
+        if (it->isClientInChannel(client.get_fd()))
+        {
+            it->removeClient(client.get_fd());
+            it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]), true);
+            if (it->isEmpty())
+            {
+                server.remove_channel(it->getName());
+                it = channels.erase(it);
+            }
+            else
+                ++it;
+        }
+        else
+            ++it;
+    }
+    server.delete_client(client.get_fd());
+    server.delete_poll_client(client.get_fd());
+    server.send_to_client(client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]));
 }
 
 void    topic(std::vector<std::string> args, Server &server, Client &client)
@@ -373,11 +381,6 @@ void    topic(std::vector<std::string> args, Server &server, Client &client)
     if (channel == NULL)
     {
         server.send_to_client(client.get_fd(), ERR_NOSUCHCHANNEL(SERVERNAME, client.get_nickname()));
-        return ;
-    }
-    if (channel->isClientInChannel(client.get_fd()) == false)
-    {
-        server.send_to_client(client.get_fd(), ERR_NOTONCHANNEL(SERVERNAME, client.get_nickname()));
         return ;
     }
     if (args.size() == 1)
