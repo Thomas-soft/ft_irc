@@ -130,7 +130,7 @@ void    Server::parse(char *buffer, Client &client)
     while (line.find("\n", start) != std::string::npos)
     {
         end = line.find("\n", start);
-        if (end - start != 0)
+        if (end - start > 0)
             lines.push_back(line.substr(start, end - start));
         start = end + 1;
     }
@@ -149,7 +149,7 @@ void    Server::parse(char *buffer, Client &client)
             args.push_back(word);
         for (size_t i = 0; i < args.size(); i++)
         {
-            if (args[i][0] == ':')
+            if (args[i][0] == ':' && args[i].size() != 1)
             {
                 size_t  begin = i;
                 std::string last_arg = "";
@@ -171,8 +171,12 @@ void    Server::parse(char *buffer, Client &client)
 		if (cmd[0] == '/')
 			cmd = cmd.substr(1, cmd.length() - 1);
         std::cout << "cmd: " << "|" << cmd << "|" << std::endl;
-        for (size_t i = 0; i < args.size(); i++)
-            std::cout << "arg[" << i << "]: " << "|" << args[i] << "|" << std::endl;
+        size_t  j = 0;
+        for (; j < args.size(); j++);
+        if (args[j - 1][0] == ':' && args[j - 1].size() == 1)
+            args.pop_back();
+        for (j = 0; j < args.size(); j++)
+            std::cout << "arg[" << j << "]: " << "|" << args[j] << "|" << std::endl;
         execute_cmd(cmd, args, *this, client);
     }
 }

@@ -109,7 +109,7 @@ void    user(std::vector<std::string> args, Server &server, Client &client)
         return ;
     }
     client.set_username(args[0]);
-    client.set_hostname("0");
+    client.set_hostname("127.0.0.1");
     client.set_servername("*");
     client.set_realname(args[3]);
 }
@@ -161,6 +161,7 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
         if (channel[i][0] != '#')
         {
             server.send_to_client(client.get_fd(), ERR_BADCHANMASK(SERVERNAME, client.get_nickname()));
+            continue ;
         }
         Channel *c = server.channel_exists(channel[i]);
         if (c == NULL)
@@ -175,7 +176,7 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
             server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), new_channel.getName(), new_channel.getAllNickname()));
             server.send_to_client(client.get_fd(), RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), new_channel.getName()));
             server.add_channel(new_channel);
-            new_channel.sendNotifToAllClients(server, JOIN_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), new_channel.getName()));
+            new_channel.sendNotifToAllClients(server, client.get_fd(), JOIN_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), new_channel.getName()), true);
 
         }
         else
@@ -202,7 +203,7 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
                         server.send_to_client(client.get_fd(), RPL_NOTOPIC(SERVERNAME, client.get_nickname(),  c->getName()));
                     server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), c->getName(), c->getAllNickname()));
                     server.send_to_client(client.get_fd(), RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), c->getName()));
-                    c->sendNotifToAllClients(server, JOIN_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName()));
+                    c->sendNotifToAllClients(server, client.get_fd(), JOIN_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName()), true);
                 }
             }
         }
@@ -235,13 +236,14 @@ void    part(std::vector<std::string> args, Server &server, Client &client)
             server.send_to_client(client.get_fd(), ERR_NOTONCHANNEL(SERVERNAME, client.get_nickname()));
             return ;
         }
+        if (args.size() > 1)
+            c->sendNotifToAllClients(server, client.get_fd(), PART_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]), true);
+        else
+		    c->sendNotifToAllClients(server, client.get_fd(), PART_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "Goodbye!"), true);
+        std::cout << "Client en moins..." << std::endl;
         c->removeClient(client.get_fd());
         if (c->isEmpty())
             server.remove_channel(c->getName());
-        if (args.size() > 1)
-            c->sendNotifToAllClients(server, PART_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
-        else
-		    c->sendNotifToAllClients(server, PART_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "Goodbye!"));
     }
 }
 
@@ -275,11 +277,14 @@ void    kick(std::vector<std::string> args, Server &server, Client &client)
         return ;
     }
 
-    channel->removeClient(client.get_fd());
-    if (args.size() > 2)
-        channel->sendNotifToAllClients(server, KICK_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), channel->getName(), target->get_nickname(), args[2]));
-    else
-        channel->sendNotifToAllClients(server, KICK_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), channel->getName(), target->get_nickname(), "Goodbye!"));
+    if (target->get_fd() != client.get_fd())
+    {
+        if (args.size() > 2)
+            channel->sendNotifToAllClients(server, client.get_fd(), KICK_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), channel->getName(), target->get_nickname(), args[2]), true);
+        else
+            channel->sendNotifToAllClients(server, client.get_fd(), KICK_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), channel->getName(), target->get_nickname(), "Goodbye!"), true);
+        channel->removeClient(target->get_fd());
+    }
 }
 
 void    privmsg(std::vector<std::string> args, Server &server, Client &client)
@@ -313,14 +318,14 @@ void    privmsg(std::vector<std::string> args, Server &server, Client &client)
             if (channel == NULL)
             {
                 server.send_to_client(client.get_fd(), ERR_NOSUCHCHANNEL(SERVERNAME, client.get_nickname()));
-                return ;
+                continue ;
             }
             if (channel->isClientInChannel(client.get_fd()) == false)
             {
                 server.send_to_client(client.get_fd(), ERR_CANNOTSENDTOCHAN(SERVERNAME, client.get_nickname(), channel->getName()));
-                return ;
+                continue ;
             }
-            channel->sendNotifToAllClients(server, PRIVMSG_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), channel->getName(), args[1]));
+            channel->sendNotifToAllClients(server, client.get_fd(), PRIVMSG_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), channel->getName(), args[1]), false);
         }
         else
         {
@@ -328,9 +333,13 @@ void    privmsg(std::vector<std::string> args, Server &server, Client &client)
             if (c == NULL)
             {
                 server.send_to_client(client.get_fd(), ERR_NOSUCHNICK(SERVERNAME, client.get_nickname()));
-                return ;
+                continue ;
             }
+            std::cout << c->get_fd() << " | " << client.get_fd() << std::endl;
+            if (c->get_fd() != client.get_fd())
+            {
             server.send_to_client(c->get_fd(), PRIVMSG_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->get_nickname(), args[1]));
+            }
         }
     }
 }
@@ -342,7 +351,10 @@ void    quit(std::vector<std::string> args, Server &server, Client &client)
     (void)client;
 
     // A FAIRE
-
+    // REMOVE LES CLIENTS DE :
+    // server : _pollfd, _client
+    // tout les channel : _client, _operator
+    // CA ENVOI LA NOTIF A TOUT LE MONDE DANS CHAQUE CHANNEL
 	server.remove_client(client.get_fd());
     if (args.size() > 0)
         server.send_to_client(client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]));
@@ -384,7 +396,7 @@ void    topic(std::vector<std::string> args, Server &server, Client &client)
         return ;
     }
     channel->setTopic(args[1]);
-    channel->sendNotifToAllClients(server, TOPIC_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), channel->getName(), args[1]));
+    channel->sendNotifToAllClients(server, client.get_fd(), TOPIC_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), channel->getName(), args[1]), true);
 }
 
 void    invite(std::vector<std::string> args, Server &server, Client &client)

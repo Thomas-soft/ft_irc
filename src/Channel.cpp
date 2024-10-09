@@ -147,13 +147,16 @@ bool   Channel::isEmpty()
     return false;
 }
 
-void    Channel::sendNotifToAllClients(Server &server, std::string message)
+void    Channel::sendNotifToAllClients(Server &server, int fd, std::string message, bool sendToAll)
 {
     size_t i = 0;
 
 	while (i < _client.size())
 	{
+        if (fd != _client[i].get_fd() || sendToAll == true)
+        {
         server.send_to_client(_client[i].get_fd(), message);
+        }
 		i++;
 	}
 }

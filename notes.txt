@@ -193,3 +193,16 @@ channels :
 messages :
     - une commande peut contenir au maximum 15 parametres
     - max char length : 510 + \r\n
+
+
+
+
+
+A REGLER :
+
+    - parsing du dernier arg
+    - fonction quit
+    - fonction invite
+    - modes
+    - limit de clients dans les channels (_limit)
+    - JOIN c1,c2,c3 k1,k2,k3

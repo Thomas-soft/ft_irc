@@ -45,7 +45,7 @@ public:
 	//   Other function       //
 	// ---------------------- //
 	void	removeClient(int fd);
-	void	sendNotifToAllClients(Server &server, std::string message);
+	void	sendNotifToAllClients(Server &server, int fd, std::string message, bool sendToAll);
     bool    isClientInChannel(int fd);
     bool    isClientOperator(int fd);
     void    add_client(Client &client);
