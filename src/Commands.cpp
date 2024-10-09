@@ -415,6 +415,11 @@ void    topic(std::vector<std::string> args, Server &server, Client &client)
         server.send_to_client(client.get_fd(), ERR_NOSUCHCHANNEL(SERVERNAME, client.get_nickname()));
         return ;
     }
+    if (channel->isClientInChannel(client.get_fd()) == false)
+    {
+        server.send_to_client(client.get_fd(), ERR_NOTONCHANNEL(SERVERNAME, client.get_nickname()));
+        return ;
+    }
     if (args.size() == 1)
     {
         if (channel->getTopic() == "")
