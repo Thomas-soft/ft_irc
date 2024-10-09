@@ -181,11 +181,28 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
         }
         else
         {
-            if (key.size() > i)
+            if (c->getKey() != "")
             {
-                if (c->getKey() != "" && c->getKey() != key[i])
+                if (key.size() > i && key[i] == c->getKey())
+                {
+                    if (c->isClientInChannel(client.get_fd()) == false)
+                    {
+                        c->add_client(client);
+                        // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL à vérif
+                        std::vector<Client> clients = c->getAllClients();
+                        if (c->getTopic() != "")
+                            server.send_to_client(client.get_fd(), RPL_TOPIC(SERVERNAME, client.get_nickname(), c->getName(), c->getTopic()));
+                        else
+                            server.send_to_client(client.get_fd(), RPL_NOTOPIC(SERVERNAME, client.get_nickname(),  c->getName()));
+                        server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), c->getName(), c->getAllNickname()));
+                        server.send_to_client(client.get_fd(), RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), c->getName()));
+                        c->sendNotifToAllClients(server, client.get_fd(), JOIN_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName()), true);
+                    }
+                }
+                else
                 {
                     server.send_to_client(client.get_fd(), ERR_BADCHANNELKEY(SERVERNAME, client.get_nickname()));
+                    continue ;
                 }
             }
             else
@@ -229,12 +246,12 @@ void    part(std::vector<std::string> args, Server &server, Client &client)
         if (c == NULL)
         {
             server.send_to_client(client.get_fd(), ERR_NOSUCHCHANNEL(SERVERNAME, client.get_nickname()));
-            return ;
+            continue ;
         }
         if (c->isClientInChannel(client.get_fd()) == false)
         {
             server.send_to_client(client.get_fd(), ERR_NOTONCHANNEL(SERVERNAME, client.get_nickname()));
-            return ;
+            continue ;
         }
         if (args.size() > 1)
             c->sendNotifToAllClients(server, client.get_fd(), PART_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]), true);
@@ -348,12 +365,16 @@ void    quit(std::vector<std::string> args, Server &server, Client &client)
 {    
     std::vector<Channel> &channels = server.getAllChannels();
     std::vector<Channel>::iterator it;
+
     for (it = channels.begin(); it != channels.end();)
     {
         if (it->isClientInChannel(client.get_fd()))
         {
             it->removeClient(client.get_fd());
-            it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]), true);
+            if (args.size() > 0)
+                it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]), false);
+            else
+                it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), "Goodbye!"), false);
             if (it->isEmpty())
             {
                 server.remove_channel(it->getName());
