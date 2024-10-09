@@ -20,6 +20,7 @@ private:
 public:
     Channel(std::string name);
     ~Channel();
+
     // ---------------------- //
 	//   Channel setter       //
 	// ---------------------- //
@@ -29,6 +30,7 @@ public:
     void    setOperator(Client& client);
     std::vector<Client> getAllClients() const;
     std::string    getAllNickname();
+
     // ---------------------- //
 	//   Channel getters      //
 	// ---------------------- //
@@ -38,11 +40,12 @@ public:
     bool    getTopicSet() const;
     bool    getInviteOnly() const;
     size_t  getLimit() const;
+
     // ---------------------- //
 	//   Other function       //
 	// ---------------------- //
 	void	removeClient(int fd);
-	void	sendQuitMessage(Server &server, int fd);
+	void	sendNotifToAllClients(Server &server, std::string message);
     bool    isClientInChannel(int fd);
     bool    isClientOperator(int fd);
     void    add_client(Client &client);
