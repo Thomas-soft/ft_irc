@@ -387,29 +387,49 @@ void    quit(std::vector<std::string> args, Server &server, Client &client)
     std::vector<Channel> &channels = server.getAllChannels();
     std::vector<Channel>::iterator it;
 
-    for (it = channels.begin(); it != channels.end();)
+    for (it = channels.begin(); it != channels.end(); it++)
     {
         if (it->isClientInChannel(client.get_fd()))
         {
-            it->removeClient(client.get_fd());
             if (args.size() > 0)
                 it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]), false);
             else
                 it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), "Goodbye!"), false);
+            it->removeClient(client.get_fd());
             if (it->isEmpty())
             {
                 server.remove_channel(it->getName());
                 it = channels.erase(it);
             }
-            else
-                ++it;
         }
-        else
-            ++it;
     }
     server.delete_client(client.get_fd());
     server.delete_poll_client(client.get_fd());
-    server.send_to_client(client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]));
+    close(client.get_fd());
+
+    // for (it = channels.begin(); it != channels.end();)
+    // {
+    //     if (it->isClientInChannel(client.get_fd()))
+    //     {
+    //         it->removeClient(client.get_fd());
+    //         if (args.size() > 0)
+    //             it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]), false);
+    //         else
+    //             it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), "Goodbye!"), false);
+    //         if (it->isEmpty())
+    //         {
+    //             server.remove_channel(it->getName());
+    //             it = channels.erase(it);
+    //         }
+    //         else
+    //             ++it;
+    //     }
+    //     else
+    //         ++it;
+    // }
+    // server.delete_client(client.get_fd());
+    // server.delete_poll_client(client.get_fd());
+    // server.send_to_client(client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]));
 }
 
 void    topic(std::vector<std::string> args, Server &server, Client &client)
