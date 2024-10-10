@@ -204,6 +204,6 @@ A REGLER :
     - fonction quit (crash quand il y a un seul utilisateur qui fait /quit) ❌
     - mode ✅
     - fonction invite ❌
-    - limit de clients dans les channels (_limit) ✅
+    - limit de clients dans les channels (_limit) ✅ (presque : MODE +i command invalid mais marche, ensuite faut enlever le Cannot join to channel (you must be invited))
     - JOIN c1,c2,c3 k1,k2,k3 ✅
     - signaux ❌

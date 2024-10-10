@@ -26,7 +26,7 @@
 
 #define RPL_NOTOPIC(servername, nickname, channel) (std::string(":") + servername + " 331 " + nickname + " " + channel + " :No topic is set\r\n")
 
-#define RPL_INVITING(servername, nickname, channel, allNicknames) (std::string(":") + servername + " 341 " + nickname + " " + allNicknames + " " + channel + "\r\n")
+#define RPL_INVITING(servername, nickname, nickname_invited, channel) (std::string(":") + servername + " 341 " + nickname + " " + nickname_invited + channel + "\r\n")
 
 #define RPL_TOPIC(servername, nickname, channel, topic) (std::string(":") + servername + " 332 " + nickname + " " + channel + " :" + topic + "\r\n")
 
@@ -54,6 +54,8 @@
 #define KICK_NOTIFY(nickname, username, hostname, channel, target, reason) (std::string(":") + nickname + "!" + username + "@" + hostname + " KICK " + channel + " " + target + " :" + reason + "\r\n")
 
 #define PRIVMSG_NOTIFY(nickname, username, hostname, channel, message) (std::string(":") + nickname + "!" + username + "@" + hostname + " PRIVMSG " + channel + " :" + message + "\r\n")
+
+#define INVITE_NOTIFY(nickname, username, hostname, channel) (std::string(":") + nickname + "!" + username + "@" + hostname + " INVITE " + nickname + " :" + channel + "\r\n")
 
 
 // --------------------- //
