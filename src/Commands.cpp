@@ -198,6 +198,11 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
                 {
                     if (c->isClientInChannel(client.get_fd()) == false)
                     {
+                        if (c->getLimit() != 0 && c->getLimit() <= c->getAllClients().size())
+                        {
+                            server.send_to_client(client.get_fd(), ERR_CHANNELISFULL(SERVERNAME, client.get_nickname()));
+                            return ;
+                        }
                         c->add_client(client);
                         // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL à vérif
                         std::vector<Client> clients = c->getAllClients();
@@ -222,6 +227,11 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
                 // server.add_client_to_channel(client, channel[i]);
                 if (c->isClientInChannel(client.get_fd()) == false)
                 {
+                    if (c->getLimit() != 0 && c->getLimit() <= c->getAllClients().size())
+                    {
+                        server.send_to_client(client.get_fd(), ERR_CHANNELISFULL(SERVERNAME, client.get_nickname()));
+                        return ;
+                    }
                     c->add_client(client);
                     // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL à vérif
                     std::vector<Client> clients = c->getAllClients();
