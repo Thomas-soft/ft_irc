@@ -200,9 +200,10 @@ messages :
 
 A REGLER :
 
-    - parsing du dernier arg
-    - fonction quit (crash quand il y a un seul utilisateur qui fait /quit) 
+    - parsing du dernier arg ✅
+    - fonction quit (crash quand il y a un seul utilisateur qui fait /quit) ❌
     - mode ✅
-    - fonction invite 
+    - fonction invite ❌
     - limit de clients dans les channels (_limit) ✅
-    - JOIN c1,c2,c3 k1,k2,k3
+    - JOIN c1,c2,c3 k1,k2,k3 ✅
+    - signaux ❌
