@@ -162,6 +162,7 @@ void    Server::read_client(size_t i)
         for (j = 0; j < args.size(); j++)
             std::cout << "arg[" << j << "]: " << "|" << args[j] << "|" << std::endl;
         execute_cmd(cmd, args, *this, this->get_client(_pollfd[k].fd));
+        std::cout << "Client connecter: " << _client.size() << std::endl;
     }
 
 

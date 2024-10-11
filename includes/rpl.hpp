@@ -87,7 +87,7 @@
 
 #define ERR_ALREADYONCHANNEL(servername, nickname) (std::string(":") + servername + " 443 " + nickname + " :You're already on that channel\r\n")
 
-#define ERR_NICKNAMEINUSE(servername, nickname) (std::string(":") + servername + " 433 " + nickname + " :Nickname is already in use\r\n")
+#define ERR_NICKNAMEINUSE(servername, nickname) (std::string(":") + servername + " 433 * " + nickname + " :Nickname is already in use\r\n")
 
 #define ERR_NOTONCHANNEL(servername, nickname) (std::string(":") + servername + " 442 " + nickname + " :You're not on that channel\r\n")
 

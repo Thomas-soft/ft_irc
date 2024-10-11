@@ -74,7 +74,7 @@ void    nick(std::vector<std::string> args, Server &server, Client &client)
         }
         if (server.is_nick_free(args[0], client.get_fd()) == false)
         {
-            server.send_to_client(client.get_fd(), ERR_NICKNAMEINUSE(SERVERNAME, client.get_nickname()));
+            server.send_to_client(client.get_fd(), ERR_NICKNAMEINUSE(SERVERNAME, args[0]));
             return ;
         }
         client.set_nickname(args[0]);
