@@ -2,10 +2,16 @@
 
 Channel::Channel() : _name(""), _key(""), _topic_set(false), _topic(""), _invite_only(false), _limit(0)
 {
+    _client.clear();
+    _operator.clear();
+    _invited.clear();
 }
 
 Channel::Channel(std::string name) : _name(name), _key(""), _topic_set(false), _topic(""), _invite_only(false), _limit(0)
 {
+    _client.clear();
+    _operator.clear();
+    _invited.clear();
 }
 
 Channel::~Channel()
@@ -77,7 +83,7 @@ void    Channel::setUser(Client& client)
             break ;
         }
     }
-    _client.push_back(client);
+    // _operator.push_back(client);
 }
 
 void    Channel::setName(std::string name)
@@ -90,7 +96,9 @@ bool    Channel::isClientInChannel(int fd)
     for (size_t i = 0; i < _client.size(); i++)
     {
         if (_client[i].get_fd() == fd)
+        {
             return (true);
+        }
     }
     return (false);
 }
@@ -115,12 +123,26 @@ void	Channel::removeClient(int fd)
     for (size_t i = 0; i < _client.size(); i++)
     {
         if (_client[i].get_fd() == fd)
+        {
             _client.erase(_client.begin() + i);
+            break ;
+        }
     }
     for (size_t i = 0; i < _operator.size(); i++)
     {
         if (_operator[i].get_fd() == fd)
+        {
             _operator.erase(_operator.begin() + i);
+            break ;
+        }
+    }
+    for (size_t i = 0; i < _invited.size(); i++)
+    {
+        if (_invited[i].get_fd() == fd)
+        {
+            _invited.erase(_operator.begin() + i);
+            break ;
+        }
     }
 }
 
@@ -187,4 +209,39 @@ void    Channel::sendNotifToAllClients(Server &server, int fd, std::string messa
 void Channel::setTopicSet(bool topic_set)
 {
     _topic_set = topic_set;
+}
+
+void    Channel::push_invited(Client &client)
+{
+    for (size_t i = 0; i < _invited.size(); i++)
+    {
+        if (client.get_fd() == _invited[i].get_fd())
+            return ;
+    }
+    _invited.push_back(client);
+}
+
+bool    Channel::isInvited(Client &client)
+{
+    for (size_t i = 0; i < _invited.size(); i++)
+    {
+        if (client.get_fd() == _invited[i].get_fd())
+            return (true);
+    }
+    return (false);
+}
+
+void    Channel::removeInvited(Client &client)
+{
+    for (size_t i = 0; i < _invited.size(); i++)
+    {
+        std::cout << _invited.size() << std::endl;
+        std::cout << _invited[i].get_nickname() << std::endl;
+        std::cout << client.get_nickname() << std::endl;
+        if (_invited[i].get_fd() == client.get_fd())
+        {
+            _invited.erase(_invited.begin() + i);
+            break ;
+        }
+    }
 }

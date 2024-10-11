@@ -323,11 +323,14 @@ void    Server::ft_exit(std::string error)
 
 void Server::delete_client(int fd)
 {
+    std::cout << "Client size: " << _client.size() << std::endl;
     for (size_t i = 0; i < _client.size(); i++)
     {
         if (_client[i].get_fd() == fd)
         {
+            std::cout << "Client size: " << _client.size() << std::endl;
             _client.erase(_client.begin() + i);
+            std::cout << "Client size: " << _client.size() << std::endl;
             return ;
         }
     }
@@ -335,11 +338,14 @@ void Server::delete_client(int fd)
 
 void Server::delete_poll_client(int fd)
 {
+    std::cout << "pollfd size : " << _pollfd.size() << std::endl;
     for (size_t i = 0; i < _pollfd.size(); i++)
     {
         if (_pollfd[i].fd == fd)
         {
+            std::cout << "pollfd size : " << _pollfd.size() << std::endl;
             _pollfd.erase(_pollfd.begin() + i);
+            std::cout << "pollfd size : " << _pollfd.size() << std::endl;
             return ;
         }
     }
@@ -347,5 +353,5 @@ void Server::delete_poll_client(int fd)
 
 std::vector<Channel>& Server::getAllChannels()
 {
-    return _channel;
+    return (_channel);
 }

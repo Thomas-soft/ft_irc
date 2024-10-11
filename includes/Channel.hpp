@@ -11,6 +11,7 @@ private:
     std::string _key;
     std::vector<Client> _client;
     std::vector<Client> _operator;
+    std::vector<Client> _invited;
     bool _topic_set;
     std::string _topic;
     bool _invite_only;
@@ -55,4 +56,7 @@ public:
     Client* getKickTarget(const std::string &nickname);
     bool    isEmpty();
     void    setTopicSet(bool topic_set);
+    void    push_invited(Client &client);
+    bool    isInvited(Client &client);
+    void    removeInvited(Client &client);
 };

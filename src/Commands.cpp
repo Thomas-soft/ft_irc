@@ -135,6 +135,7 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
     if (args.size() < 1)
     {
         server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "JOIN"));
+        std::cout << "11111111111111111111111111111" << std::endl;
         return ;
     }
     std::stringstream   stream_channel(args[0]);
@@ -158,7 +159,7 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
     // }
     for (size_t i = 0; i < channel.size(); i++)
     {
-        if (channel[i][0] != '#')
+        if (channel[i][0] != '#' && channel[i].size() != 1)
         {
             server.send_to_client(client.get_fd(), ERR_BADCHANMASK(SERVERNAME, client.get_nickname()));
             continue ;
@@ -169,18 +170,18 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
         {
             // Create channel
             Channel new_channel(channel[i]);
-            if (key.size() > i)
-                new_channel.setKey(key[i]);
             new_channel.setOperator(client);
             new_channel.add_client(client);
+            if (key.size() > i)
+                new_channel.setKey(key[i]);
             server.send_to_client(client.get_fd(), RPL_NOTOPIC(SERVERNAME, client.get_nickname(),  new_channel.getName()));
             server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), new_channel.getName(), new_channel.getAllNickname()));
             server.send_to_client(client.get_fd(), RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), new_channel.getName()));
             server.add_channel(new_channel);
             new_channel.sendNotifToAllClients(server, client.get_fd(), JOIN_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), new_channel.getName()), true);
-
+            continue ;
         }
-        else if (c->getInviteOnly() == true)
+        else if (c->getInviteOnly() == true && c->isInvited(client) == false)
         {
             server.send_to_client(client.get_fd(), ERR_INVITEONLYCHAN(SERVERNAME, client.get_nickname()));
             return ;
@@ -196,13 +197,15 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
             {
                 if (key.size() > i && key[i] == c->getKey())
                 {
+                    std::cout << "dsadwadsadwadsadwadsadwadsadwadsadawdsadsa" << std::endl;
                     if (c->isClientInChannel(client.get_fd()) == false)
                     {
                         if (c->getLimit() != 0 && c->getLimit() <= c->getAllClients().size())
                         {
                             server.send_to_client(client.get_fd(), ERR_CHANNELISFULL(SERVERNAME, client.get_nickname()));
-                            return ;
+                            continue ;
                         }
+                        c->removeInvited(client);
                         c->add_client(client);
                         // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL à vérif
                         std::vector<Client> clients = c->getAllClients();
@@ -232,7 +235,6 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
                         server.send_to_client(client.get_fd(), ERR_CHANNELISFULL(SERVERNAME, client.get_nickname()));
                         return ;
                     }
-                    c->add_client(client);
                     // SEND NOTIFICATION TO ALL CLIENTS IN CHANNEL à vérif
                     std::vector<Client> clients = c->getAllClients();
                     if (c->getTopic() != "")
@@ -242,6 +244,8 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
                     server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), c->getName(), c->getAllNickname()));
                     server.send_to_client(client.get_fd(), RPL_ENDOFNAMES(SERVERNAME, client.get_nickname(), c->getName()));
                     c->sendNotifToAllClients(server, client.get_fd(), JOIN_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName()), true);
+                    c->removeInvited(client);
+                    c->add_client(client);
                 }
             }
         }
@@ -383,30 +387,58 @@ void    privmsg(std::vector<std::string> args, Server &server, Client &client)
 }
 
 void    quit(std::vector<std::string> args, Server &server, Client &client)
-{    
-    std::vector<Channel> &channels = server.getAllChannels();
-    std::vector<Channel>::iterator it;
+{
+    std::vector<Channel>&  channels = server.getAllChannels();
 
-    for (it = channels.begin(); it != channels.end(); it++)
-    {
-        if (it->isClientInChannel(client.get_fd()))
-        {
-            std::cout << "AA" << client.get_nickname() << "AA" << std::endl;
+    for (std::vector<class Channel>::iterator it = channels.begin(); it != channels.end();)
+	{
+		if (it->isClientInChannel(client.get_fd()))
+		{
+            std::string reason = "Goodbye";
             if (args.size() > 0)
-                it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]), true);
-            else
-                it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), "Goodbye!"), true);
-            it->removeClient(client.get_fd());
-            if (it->isEmpty())
-            {
-                server.remove_channel(it->getName());
-                it = channels.erase(it);
-            }
-        }
-    }
-    close(client.get_fd());
-    server.delete_client(client.get_fd());
-    server.delete_poll_client(client.get_fd());
+                reason = args[0];
+            it->sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), reason), false);
+			it->removeClient(client.get_fd());
+		}
+		if (it->isEmpty())
+			it = channels.erase(it);
+		else
+			it++;
+	}
+    int fd = client.get_fd();
+    server.delete_poll_client(fd);
+    server.delete_client(fd);
+	close(fd);
+
+
+
+
+
+    // std::vector<Channel> channels = server.getAllChannels();
+
+    // for (size_t i = 0; i < channels.size(); i++)
+    // {
+    //     std::cout << channels[i].getName() << std::endl;
+    //     std::cout << client.get_fd() << std::endl;
+    //     if (channels[i].isClientInChannel(client.get_fd()) == true)
+    //     {
+    //         if (args.size() > 0)
+    //             channels[i].sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), args[0]), true);
+    //         else
+    //             channels[i].sendNotifToAllClients(server, client.get_fd(), QUIT_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), "Goodbye!"), true);
+    //         channels[i].removeClient(client.get_fd());
+    //         if (channels[i].isEmpty())
+    //         {
+    //             server.remove_channel(channels[i].getName());
+    //         }
+    //     }
+    // }
+    // std::cout << "QUUUUUUUUUUUUUUUUUUUUUIT" << std::endl;
+    // int f = client.get_fd();
+    // std::cout << "f: " << f << std::endl;
+    // close(client.get_fd());
+    // server.delete_client(f);
+    // server.delete_poll_client(f);
 
     // for (it = channels.begin(); it != channels.end();)
     // {
@@ -507,7 +539,7 @@ void    invite(std::vector<std::string> args, Server &server, Client &client)
     // algorithm commande invite
     server.send_to_client(client.get_fd(), RPL_INVITING(SERVERNAME, client.get_nickname(), c->get_nickname(), channel->getName()));
     server.send_to_client(c->get_fd(), INVITE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), channel->getName()));
-    server.add_client_to_channel(*c, channel->getName());
+    channel->push_invited(*c);
 }
 
 // DANS JOIN NE PAS OUBLIER LA LIMITE DU CHANNEL SI ELLE N'EST PAS A 0
@@ -516,7 +548,8 @@ void    mode(std::vector<std::string> args, Server &server, Client &client)
 {
     if (args.size() < 2)
     {
-        // ERR_NEEDMOREPARAMS
+        server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "MODE"));
+        return ;
     }
     std::string channel = args[0];
 
@@ -541,55 +574,71 @@ void    mode(std::vector<std::string> args, Server &server, Client &client)
         if (args[1][1] == 'i')
         {
             c->setInviteOnly(true);
-            server.send_to_client(client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
+            c->sendNotifToAllClients(server, client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "+i"), true);
         }
-        if (args[1][1] == 'o')
+        else if (args[1][1] == 'o')
         {
-            Client *target = c->getKickTarget(args[2]);
-            if (c->isClientInChannel(target->get_fd()) == false)
+            
+            if (args.size() < 3)
             {
-                server.send_to_client(client.get_fd(), ERR_NOTONCHANNEL(SERVERNAME, client.get_nickname()));
+                server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "MODE"));
                 return ;
             }
+            Client *target = c->getKickTarget(args[2]);
             if (target == NULL)
             {
                 server.send_to_client(client.get_fd(), ERR_NOSUCHNICK(SERVERNAME, client.get_nickname()));
                 return ;
             }
+            if (c->isClientInChannel(target->get_fd()) == false)
+            {
+                server.send_to_client(client.get_fd(), ERR_NOTONCHANNEL(SERVERNAME, client.get_nickname()));
+                return ;
+            }
             c->setOperator(*target);
             // on doit afficher @ au début du nouveau opérateur ????
-            server.send_to_client(client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
             server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), c->getName(), c->getAllNickname()));
+            c->sendNotifToAllClients(server, client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "+o"), true);
         }
-        if (args[1][1] == 'l')
+        else if (args[1][1] == 'l')
         {
-            int newLimit;
+            size_t  newLimit;
 
+            if (args.size() < 3)
+            {
+                server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "MODE"));
+                return ;
+            }
             std::stringstream ss(args[2]);
             ss >> newLimit;
-            if (ss.fail() || newLimit < 0 || !ss.eof())
+            if (ss.fail() || (int)newLimit < 0 || !ss.eof())
             {
                 std::cout << "caca boudin" << std::endl;
                 return ;
             }
             c->setLimit(newLimit);
-            server.send_to_client(client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
+            c->sendNotifToAllClients(server, client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "+l"), true);
         }
-        if (args[1][1] == 'k')
+        else if (args[1][1] == 'k')
         {
+            if (args.size() < 3)
+            {
+                server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "MODE"));
+                return ;
+            }
             if (c->getKey() != "")
             {
-                // ERRKEYSET
+                server.send_to_client(client.get_fd(), ERR_KEYSET(SERVERNAME, c->getName()));
                 return ;
             }
             c->setKey(args[2]);
-            server.send_to_client(client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
+            c->sendNotifToAllClients(server, client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "+k"), true);
         }
         // mode +t pour activé la restriction de la commande topic au operator
-        if (args[1][1] == 't')
+        else if (args[1][1] == 't')
         {
             c->setTopicSet(false);
-            server.send_to_client(client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
+            c->sendNotifToAllClients(server, client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "+t"), true);
         }
         else
         {
@@ -602,39 +651,44 @@ void    mode(std::vector<std::string> args, Server &server, Client &client)
         if (args[1][1] == 'i')
         {
             c->setInviteOnly(false);
-            server.send_to_client(client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
+            c->sendNotifToAllClients(server, client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "-i"), true);
         }
-        if (args[1][1] == 'o')
+        else if (args[1][1] == 'o')
         {
-            Client *target = c->getKickTarget(args[2]);
-            if (c->isClientInChannel(target->get_fd()) == false)
+            if (args.size() < 3)
             {
-                server.send_to_client(client.get_fd(), ERR_NOTONCHANNEL(SERVERNAME, client.get_nickname()));
+                server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "MODE"));
                 return ;
             }
+            Client *target = c->getKickTarget(args[2]);
             if (target == NULL)
             {
                 server.send_to_client(client.get_fd(), ERR_NOSUCHNICK(SERVERNAME, client.get_nickname()));
                 return ;
             }
+            if (c->isClientInChannel(target->get_fd()) == false)
+            {
+                server.send_to_client(client.get_fd(), ERR_NOTONCHANNEL(SERVERNAME, client.get_nickname()));
+                return ;
+            }
             c->setUser(*target);
-            server.send_to_client(client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
             server.send_to_client(client.get_fd(), RPL_NAMREPLY(SERVERNAME, client.get_nickname(), c->getName(), c->getAllNickname()));
+            c->sendNotifToAllClients(server, client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "-o"), true);
         }
-        if (args[1][1] == 'l')
+        else if (args[1][1] == 'l')
         {
             c->setLimit(0);
-            server.send_to_client(client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
+            c->sendNotifToAllClients(server, client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "-l"), true);
         }
-        if (args[1][1] == 'k')
+        else if (args[1][1] == 'k')
         {
             c->setKey("");
-            server.send_to_client(client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
+            c->sendNotifToAllClients(server, client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "-k"), true);
         }
-        if (args[1][1] == 't')
+        else if (args[1][1] == 't')
         {
             c->setTopicSet(true);
-            server.send_to_client(client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), args[1]));
+            c->sendNotifToAllClients(server, client.get_fd(), MODE_NOTIFY(client.get_nickname(), client.get_username(), client.get_hostname(), c->getName(), "-t"), true);
         }
         else
         {

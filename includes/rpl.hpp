@@ -97,6 +97,8 @@
 
 #define ERR_PASSWDMISMATCH(servername, nickname) (std::string(":") + servername + " 464 " + nickname + " :Password incorrect\r\n")
 
+#define ERR_KEYSET(servername, channel) (std::string(":") + servername + " 464 " + channel + " :Channel key already set\r\n")
+
 #define ERR_CHANNELISFULL(servername, nickname) (std::string(":") + servername + " 471 " + nickname + " :Cannot join channel (+l)\r\n")
 
 #define ERR_INVITEONLYCHAN(servername, nickname) (std::string(":") + servername + " 473 " + nickname + "\r\n")
