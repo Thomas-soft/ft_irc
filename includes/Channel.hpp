@@ -59,4 +59,5 @@ public:
     void    push_invited(Client &client);
     bool    isInvited(Client &client);
     void    removeInvited(Client &client);
+    void    clear_client();
 };

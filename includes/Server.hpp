@@ -33,6 +33,7 @@ class Server
         std::vector<pollfd> _pollfd;
         std::vector<Client> _client;
         std::vector<Channel>    _channel;
+        bool    _run;
         Server();
 
     public:
@@ -57,12 +58,12 @@ class Server
         // --------------------- //
         int		get_client_index(int fd);
         int     send_to_client(int fd, std::string msg);
-        bool    is_nick_free(std::string nick);
+        bool    is_nick_free(std::string nick, int fd);
         std::string trim(std::string line);
         Channel*    channel_exists(std::string name);
         Client*     client_exists(std::string name);
 		void	remove_client(int fd);
-        void    add_channel(Channel &channel);
+        void    add_channel(Channel& channel);
         void    add_client_to_channel(Client &client, std::string channelName);
         Client& get_client(int fd);
         std::string get_pass() const;

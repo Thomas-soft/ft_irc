@@ -2,14 +2,13 @@
 
 bool _signal = false;
 
-Server::Server(int port, std::string pass) : _port(port), _pass(pass)
+Server::Server(int port, std::string pass) : _port(port), _pass(pass), _run(true)
 {
 }
 
 Server::~Server()
 {
 }
-
 
 // --------------------- //
 // Server start and loop //
@@ -41,7 +40,7 @@ void    Server::start()
     pollfd  server_pollfd = {_server_fd, POLLIN, 0};
     _pollfd.push_back(server_pollfd);
     std::cout << "Server started on port " << _port << std::endl;
-    while (1)
+    while (_run == true)
     {
         int status = 0;
 
@@ -51,7 +50,7 @@ void    Server::start()
         if (status == 0)
             continue ;
 		if (_signal)
-			ft_exit("Interruption signal");
+			break;
         for (size_t i = 0; i < _pollfd.size(); i++)
         {
             if (_pollfd[i].revents & POLLIN)
@@ -85,53 +84,37 @@ void    Server::read_client(size_t i)
 {
     char    buffer[512] = {0};
 
-    if (recv(_pollfd[i].fd, buffer, sizeof(buffer), 0) <= 0)
-    {
-		_client.erase(_client.begin() + get_client_index(_pollfd[i].fd));
-        close(_pollfd[i].fd);
-        _pollfd.erase(_pollfd.begin() + i);
-        std::cout << "Client disconnected!" << std::endl;
-    }
-    else
-    {
-        std::cout << "Message from client (fd=" << _pollfd[i].fd << "): " << buffer << std::endl;
-        parse(buffer, this->get_client(_pollfd[i].fd));
-    }
-	if (_client.size())
-		std::cout << "\nTous les clients" << std::endl;
-	for (size_t i = 0; i < _client.size(); i++)
-	{
-		std::cout << "Client " << i << ": " << _client[i].get_nickname() << std::endl;
-	}
-	if (_channel.size())
-		std::cout << "\nTous les channel" << std::endl;
-	for (size_t i = 0; i < _channel.size(); i++)
-	{
-		std::cout << "Channel " << i << ": " << _channel[i].getName() << " avec " << _channel[i].getAllClients().size() << " clients" << std::endl;
-	}
-}
-
-
-// --------------------- //
-// Server parsing        //
-// --------------------- //
-
-void    Server::parse(char *buffer, Client &client)
-{
-    // execute_cmd(cmd, args, *this, client);
-    (void)buffer;
-    (void)client;
-
     std::string         line = buffer;
     std::vector<std::string>    lines;
     size_t  start = 0;
     size_t  end = 0;
+    size_t  k = i;
+
+    do
+    {
+        if (recv(_pollfd[i].fd, buffer, sizeof(buffer), 0) <= 0)
+        {
+            _client.erase(_client.begin() + get_client_index(_pollfd[i].fd));
+            close(_pollfd[i].fd);
+            _pollfd.erase(_pollfd.begin() + i);
+            std::cout << "Client disconnected!" << std::endl;
+            return;
+        }
+        line += std::string(buffer);
+    }
+    while (line.find("\n") == std::string::npos);
+    // std::cout << line << std::endl;
+    // std::cout << "Message from client (fd=" << _pollfd[i].fd << "): " << buffer << std::endl;
+    // parse(buffer, this->get_client(_pollfd[i].fd));
 
     while (line.find("\n", start) != std::string::npos)
     {
         end = line.find("\n", start);
         if (end - start > 0)
+        {
             lines.push_back(line.substr(start, end - start));
+            std::cout << "||" << line.substr(start, end - start) << "||" << std::endl;
+        }
         start = end + 1;
     }
     for (size_t i = 0; i < lines.size(); i++)
@@ -168,18 +151,104 @@ void    Server::parse(char *buffer, Client &client)
             }
         }
         // DISPLAY
-		if (cmd[0] == '/')
-			cmd = cmd.substr(1, cmd.length() - 1);
+        if (cmd[0] == '/')
+            cmd = cmd.substr(1, cmd.length() - 1);
         std::cout << "cmd: " << "|" << cmd << "|" << std::endl;
         size_t  j = 0;
         for (; j < args.size(); j++);
-        if (args[j - 1][0] == ':' && args[j - 1].size() == 1)
+        if (args.size() > 0 && args[j - 1].size() > 0 && args[j - 1][0] == ':')
             args.pop_back();
+        // IL METS UN ARGUMENT VIDE EN TROP LORS DU NICK _
         for (j = 0; j < args.size(); j++)
             std::cout << "arg[" << j << "]: " << "|" << args[j] << "|" << std::endl;
-        execute_cmd(cmd, args, *this, client);
+        execute_cmd(cmd, args, *this, this->get_client(_pollfd[k].fd));
     }
+
+
+
+	// if (_client.size())
+	// 	std::cout << "\nTous les clients" << std::endl;
+	// for (size_t i = 0; i < _client.size(); i++)
+	// {
+	// 	std::cout << "Client " << i << ": " << _client[i].get_nickname() << std::endl;
+	// }
+	// if (_channel.size())
+	// 	std::cout << "\nTous les channel" << std::endl;
+	// for (size_t i = 0; i < _channel.size(); i++)
+	// {
+	// 	std::cout << "Channel " << i << ": " << _channel[i].getName() << " avec " << _channel[i].getAllClients().size() << " clients" << std::endl;
+	// }
 }
+
+
+// --------------------- //
+// Server parsing        //
+// --------------------- //
+
+// void    Server::parse(char *buffer, Client &client)
+// {
+//     // execute_cmd(cmd, args, *this, client);
+//     (void)buffer;
+//     (void)client;
+
+//     std::string         line = buffer;
+//     std::vector<std::string>    lines;
+//     size_t  start = 0;
+//     size_t  end = 0;
+
+//     while (line.find("\n", start) != std::string::npos)
+//     {
+//         end = line.find("\n", start);
+//         if (end - start > 0)
+//             lines.push_back(line.substr(start, end - start));
+//         start = end + 1;
+//     }
+//     for (size_t i = 0; i < lines.size(); i++)
+//     {
+//         lines[i] = trim(lines[i]);
+//         std::string cmd = "";
+//         std::vector<std::string>    args;
+//         std::stringstream   stream(lines[i]);
+//         stream >> cmd;
+//         if (cmd == "")
+//             continue ;
+//         std::string word = "";
+//         std::stringstream   args_stream(stream.str().substr(cmd.size()));
+//         while (args_stream >> word)
+//             args.push_back(word);
+//         for (size_t i = 0; i < args.size(); i++)
+//         {
+//             if (args[i][0] == ':' && args[i].size() != 1)
+//             {
+//                 size_t  begin = i;
+//                 std::string last_arg = "";
+//                 for (size_t j = i; j < args.size(); j++)
+//                 {
+//                     if (j == begin)
+//                         last_arg += args[j].substr(1);
+//                     else
+//                         last_arg += args[j];
+//                     if (j + 1 < args.size())
+//                         last_arg += " ";
+//                 }
+//                 args.erase(args.begin() + i, args.end());
+//                 args.push_back(last_arg);
+//                 break ;
+//             }
+//         }
+//         // DISPLAY
+// 		if (cmd[0] == '/')
+// 			cmd = cmd.substr(1, cmd.length() - 1);
+//         std::cout << "cmd: " << "|" << cmd << "|" << std::endl;
+//         size_t  j = 0;
+//         for (; j < args.size(); j++);
+//         if (args.size() > 0 && args[j - 1].size() > 0 && args[j - 1][0] == ':')
+//             args.pop_back();
+//         for (j = 0; j < args.size(); j++)
+//             std::cout << "arg[" << j << "]: " << "|" << args[j] << "|" << std::endl;
+//         execute_cmd(cmd, args, *this, client);
+//     }
+// }
 
 
 // --------------------- //
@@ -234,12 +303,18 @@ int     Server::send_to_client(int fd, std::string msg)
     return (EXIT_SUCCESS);
 }
 
-bool    Server::is_nick_free(std::string nickname)
+bool    Server::is_nick_free(std::string nickname, int fd)
 {
     for (size_t i = 0; i < _client.size(); i++)
     {
-        if (_client[i].get_nickname() == nickname)
+        if (_client[i].get_fd() != fd && _client[i].get_nickname() == nickname)
             return (false);
+        if (_client[i].get_fd() != fd)
+        {
+            std::cout << "NICKNAME:" << _client[i].get_nickname() << std::endl;
+            std::cout << "NEW_NICKNAME:" << nickname << std::endl;
+            std::cout << std::endl;
+        }
     }
     return (true);  
 }
@@ -285,6 +360,7 @@ void    Server::add_client_to_channel(Client& client, std::string channelName)
     {
         if (_channel[i].getName() == channelName)
         {
+            _client.clear();
             _channel[i].add_client(client);
             return ;
         }
@@ -308,17 +384,32 @@ std::string Server::get_pass() const
 void    Server::close_all_fd()
 {
     for (size_t i = 0; i < _pollfd.size(); i++)
-        close(_pollfd[i].fd);
-    close(_server_fd);
+    {
+        if (_pollfd[i].fd >= 0)
+            close(_pollfd[i].fd);
+    }
+    // close(_server_fd);
 }
 
 void    Server::ft_exit(std::string error)
 {
     perror(error.c_str());
-	_client.clear();
 	close_all_fd();
+    // delete _pollfd.data();
+    // delete _client.data();
+    // delete _channel.data();
+    std::vector<Channel>&    channels = this->getAllChannels();
+
+    for (size_t i = 0; i < channels.size(); i++)
+    {
+        channels[i].clear_client();
+    }
+
+	_client.clear();
 	_pollfd.clear();
-    exit(EXIT_FAILURE);
+    _channel.clear();
+    _run = false;
+    // exit(EXIT_FAILURE);
 }
 
 void Server::delete_client(int fd)

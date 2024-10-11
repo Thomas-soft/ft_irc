@@ -83,7 +83,6 @@ void    Channel::setUser(Client& client)
             break ;
         }
     }
-    // _operator.push_back(client);
 }
 
 void    Channel::setName(std::string name)
@@ -244,4 +243,11 @@ void    Channel::removeInvited(Client &client)
             break ;
         }
     }
+}
+
+void    Channel::clear_client()
+{
+    _client.clear();
+    _operator.clear();
+    _invited.clear();
 }
