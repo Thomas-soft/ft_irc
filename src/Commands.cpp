@@ -78,15 +78,15 @@ void    nick(std::vector<std::string> args, Server &server, Client &client)
             server.send_to_client(client.get_fd(), ERR_NICKNAMEINUSE(SERVERNAME, args[0]));
             return ;
         }
-        std::vector<Channel>&  channels = server.getAllChannels();
+        // std::vector<Channel>&  channels = server.getAllChannels();
 
-        for (std::vector<class Channel>::iterator it = channels.begin(); it != channels.end();)
-        {
-            if (it->isClientInChannel(client.get_fd()))
-            {
-                it->sendNotifToAllClients(server, client.get_fd(), NICK_NOTIFY(client.get_nickname(), args[0]), true);
-            }
-        }
+        // for (std::vector<class Channel>::iterator it = channels.begin(); it != channels.end();)
+        // {
+        //     if (it->isClientInChannel(client.get_fd()))
+        //     {
+        //         it->sendNotifToAllClients(server, client.get_fd(), NICK_NOTIFY(client.get_nickname(), args[0]), true);
+        //     }
+        // }
         client.set_nickname(args[0]);
     }
 }
