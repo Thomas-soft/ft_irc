@@ -92,20 +92,20 @@ void    Server::read_client(size_t i)
     size_t  end = 0;
     size_t  k = i;
 
-    do
-    {
-        if (recv(_pollfd[i].fd, buffer, sizeof(buffer), 0) <= 0)
-        {
-            _client.erase(_client.begin() + get_client_index(_pollfd[i].fd));
-            close(_pollfd[i].fd);
-            _pollfd.erase(_pollfd.begin() + i);
-            std::cout << "Client disconnected!" << std::endl;
-            return;
-        }
-        line += std::string(buffer);
-    }
-    while (line.find("\n") == std::string::npos);
-    std::cout << "|" << line << "|" << std::endl;
+
+	if (recv(_pollfd[i].fd, buffer, sizeof(buffer), 0) <= 0)
+	{
+		_client.erase(_client.begin() + get_client_index(_pollfd[i].fd));
+		close(_pollfd[i].fd);
+		_pollfd.erase(_pollfd.begin() + i);
+		std::cout << "Client disconnected!" << std::endl;
+		return;
+	}
+	_client[get_client_index(_pollfd[i].fd)].set_buffer(_client[get_client_index(_pollfd[i].fd)].get_buffer() + buffer);
+	line = _client[get_client_index(_pollfd[i].fd)].get_buffer();
+	std::cout << _client[get_client_index(_pollfd[i].fd)].get_buffer() << std::endl;
+    if (line.find("\n") == std::string::npos)
+    	return;
     // std::cout << line << std::endl;
     // std::cout << "Message from client (fd=" << _pollfd[i].fd << "): " << buffer << std::endl;
     // parse(buffer, this->get_client(_pollfd[i].fd));
@@ -165,6 +165,7 @@ void    Server::read_client(size_t i)
             std::cout << "arg[" << j << "]: " << "|" << args[j] << "|" << std::endl;
         execute_cmd(cmd, args, *this, this->get_client(_pollfd[k].fd));
         std::cout << "Client connecter: " << _client.size() << std::endl;
+		_client[get_client_index(_pollfd[k].fd)].set_buffer(std::string(""));
     }
 
 

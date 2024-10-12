@@ -27,6 +27,11 @@ std::string Client::get_password() const
 	return (_password);
 }
 
+std::string Client::get_buffer() const
+{
+	return (_buffer);
+}
+
 std::string Client::get_nickname() const
 {
 	return (_nickname);
@@ -60,6 +65,11 @@ bool Client::is_registered() const
 void Client::set_password(std::string password)
 {
 	_password = password;
+}
+
+void Client::set_buffer(std::string buffer)
+{
+	_buffer = buffer;
 }
 
 void Client::set_nickname(std::string nickname)

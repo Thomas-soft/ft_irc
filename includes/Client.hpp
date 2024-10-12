@@ -9,6 +9,7 @@ class Client
 		std::string _password;
 		std::string _nickname;
 		std::string _username;
+		std::string _buffer;
 		std::string _hostname;
 		std::string _servername;
 		std::string _realname;
@@ -25,6 +26,7 @@ class Client
 		std::string get_nickname() const;
 		std::string get_username() const;
 		std::string get_hostname() const;
+		std::string get_buffer() const;
 		std::string get_servername() const;
 		std::string get_realname() const;
 
@@ -33,6 +35,7 @@ class Client
 		// --------------------- //
 		bool        is_registered() const;
 		void		set_password(std::string password);
+		void 		set_buffer(std::string buffer);
 		void		set_nickname(std::string nickname);
 		void		set_username(std::string username);
 		void		set_hostname(std::string hostname);
