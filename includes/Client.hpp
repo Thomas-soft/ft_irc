@@ -15,8 +15,7 @@ class Client
 		bool        _registered;
 
 	public:
-		Client(int fd, std::string nick, std::string user, std::string pass);
-		Client(int fd);
+		Client(int fd, char *ip);
 
 		// --------------------- //
 		// Client getters        //

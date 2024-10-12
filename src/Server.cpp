@@ -73,10 +73,12 @@ void    Server::accept_client()
     client_socket = accept(_server_fd, (struct sockaddr *)&client_address, &sizeof_client_address);
     if (client_socket == -1)
         perror("Server accept");
+    char    *client_ip = inet_ntoa(client_address.sin_addr);
     pollfd  client_pollfd = {client_socket, POLLIN, 0};
-    Client  client(client_pollfd.fd);
+    Client  client(client_pollfd.fd, client_ip);
     _pollfd.push_back(client_pollfd);
 	_client.push_back(client);
+    // Affichage de l'adresse IP du client
     std::cout << "New client connected!" << std::endl;
 }
 
@@ -103,6 +105,7 @@ void    Server::read_client(size_t i)
         line += std::string(buffer);
     }
     while (line.find("\n") == std::string::npos);
+    std::cout << "|" << line << "|" << std::endl;
     // std::cout << line << std::endl;
     // std::cout << "Message from client (fd=" << _pollfd[i].fd << "): " << buffer << std::endl;
     // parse(buffer, this->get_client(_pollfd[i].fd));
@@ -113,7 +116,6 @@ void    Server::read_client(size_t i)
         if (end - start > 0)
         {
             lines.push_back(line.substr(start, end - start));
-            std::cout << "||" << line.substr(start, end - start) << "||" << std::endl;
         }
         start = end + 1;
     }

@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <map>
 #include "Channel.hpp"
+#include <arpa/inet.h>  // Pour inet_ntoa
 
 #define SERVERNAME "ft_irc.com"
 

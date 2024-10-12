@@ -2,19 +2,19 @@
 
 void    execute_cmd(std::string cmd, std::vector<std::string> args, Server &server, Client &client)
 {
-    std::string cmd_func[] = {"PING", "JOIN", "PART", "KICK", "PRIVMSG", "QUIT", "TOPIC", "INVITE", "MODE", "NICK"};
-	std::string cmd_func_unregistred[] = {"PASS", "NICK", "USER"};
+    std::string cmd_func[] = {"PASS", "NICK", "USER", "PING", "JOIN", "PART", "KICK", "PRIVMSG", "QUIT", "TOPIC", "INVITE", "MODE"};
+	// std::string cmd_func_unregistred[] = {"PASS", "NICK", "USER"};
     void    (*fun[])(std::vector<std::string> args, Server &server, Client &client) = {pass, nick, user, ping, join, part, kick, privmsg, quit, topic, invite, mode};
 
-    for (size_t i = 0; i < 3; i++)
+    // for (size_t i = 0; i < 3; i++)
+    // {
+    //     if (cmd_func_unregistred[i] == cmd)
+    //         (*fun[i])(args, server, client);
+    // }
+    for (size_t i = 0; i < 12; i++)
     {
-        if (cmd_func_unregistred[i] == cmd)
+        if (cmd_func[i] == cmd)
             (*fun[i])(args, server, client);
-    }
-    for (size_t i = 0; i < 10; i++)
-    {
-        if (client.is_registered() && cmd_func[i] == cmd)
-            (*fun[i + 3])(args, server, client);
     }
     if (client.is_registered() == false
         && client.get_password() != ""
@@ -24,6 +24,7 @@ void    execute_cmd(std::string cmd, std::vector<std::string> args, Server &serv
         && client.get_servername() != ""
         && client.get_realname() != "")
     {
+        std::cout << "ASAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
         server.send_to_client(client.get_fd(), RPL_WELCOME(SERVERNAME, client.get_nickname()));
         server.send_to_client(client.get_fd(), RPL_YOURHOST(SERVERNAME, client.get_nickname()));
         server.send_to_client(client.get_fd(), RPL_CREATED(SERVERNAME, client.get_nickname()));
@@ -77,6 +78,15 @@ void    nick(std::vector<std::string> args, Server &server, Client &client)
             server.send_to_client(client.get_fd(), ERR_NICKNAMEINUSE(SERVERNAME, args[0]));
             return ;
         }
+        std::vector<Channel>&  channels = server.getAllChannels();
+
+        for (std::vector<class Channel>::iterator it = channels.begin(); it != channels.end();)
+        {
+            if (it->isClientInChannel(client.get_fd()))
+            {
+                it->sendNotifToAllClients(server, client.get_fd(), NICK_NOTIFY(client.get_nickname(), args[0]), true);
+            }
+        }
         client.set_nickname(args[0]);
     }
 }
@@ -109,14 +119,16 @@ void    user(std::vector<std::string> args, Server &server, Client &client)
         return ;
     }
     client.set_username(args[0]);
-    client.set_hostname("127.0.0.1");
     client.set_servername("*");
     client.set_realname(args[3]);
 }
 
 void    ping(std::vector<std::string> args, Server &server, Client &client)
 {
-	(void)args;
+    if (!client.is_registered())
+    {
+        return ;
+    }
 	if (args.size() == 0)
     {
 		server.send_to_client(client.get_fd(), ERR_NOORIGIN(SERVERNAME, client.get_nickname()));
@@ -132,6 +144,8 @@ void    ping(std::vector<std::string> args, Server &server, Client &client)
 
 void    join(std::vector<std::string> args, Server &server, Client &client)
 {
+    if (!client.is_registered())
+        return ;
     if (args.size() < 1)
     {
         server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "JOIN"));
@@ -159,7 +173,7 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
     // }
     for (size_t i = 0; i < channel.size(); i++)
     {
-        if (channel[i][0] != '#' && channel[i].size() != 1)
+        if (channel[i][0] != '#')
         {
             server.send_to_client(client.get_fd(), ERR_BADCHANMASK(SERVERNAME, client.get_nickname()));
             continue ;
@@ -254,6 +268,8 @@ void    join(std::vector<std::string> args, Server &server, Client &client)
 
 void    part(std::vector<std::string> args, Server &server, Client &client)
 {
+    if (!client.is_registered())
+        return ;
     if (args.size() == 0)
     {
         server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "PART"));
@@ -291,6 +307,8 @@ void    part(std::vector<std::string> args, Server &server, Client &client)
 
 void    kick(std::vector<std::string> args, Server &server, Client &client)
 {
+    if (!client.is_registered())
+        return ;
     if (args.size() < 2)
     {
         server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "KICK"));
@@ -331,6 +349,8 @@ void    kick(std::vector<std::string> args, Server &server, Client &client)
 
 void    privmsg(std::vector<std::string> args, Server &server, Client &client)
 {
+    if (!client.is_registered())
+        return ;
     if (args.size() == 0)
     {
         server.send_to_client(client.get_fd(), ERR_NORECIPIENT(SERVERNAME, client.get_nickname()));
@@ -388,6 +408,8 @@ void    privmsg(std::vector<std::string> args, Server &server, Client &client)
 
 void    quit(std::vector<std::string> args, Server &server, Client &client)
 {
+    if (!client.is_registered())
+        return ;
     std::vector<Channel>&  channels = server.getAllChannels();
 
     for (std::vector<class Channel>::iterator it = channels.begin(); it != channels.end();)
@@ -467,6 +489,8 @@ void    quit(std::vector<std::string> args, Server &server, Client &client)
 
 void    topic(std::vector<std::string> args, Server &server, Client &client)
 {
+    if (!client.is_registered())
+        return ;
     if (args.size() < 1)
     {
         server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "TOPIC"));
@@ -504,6 +528,8 @@ void    topic(std::vector<std::string> args, Server &server, Client &client)
 
 void    invite(std::vector<std::string> args, Server &server, Client &client)
 {
+    if (!client.is_registered())
+        return ;
     if (args.size() < 2)
     {
         server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "INVITE"));
@@ -546,6 +572,8 @@ void    invite(std::vector<std::string> args, Server &server, Client &client)
 
 void    mode(std::vector<std::string> args, Server &server, Client &client)
 {
+    if (!client.is_registered())
+        return ;
     if (args.size() < 2)
     {
         server.send_to_client(client.get_fd(), ERR_NEEDMOREPARAMS(SERVERNAME, client.get_nickname(), "MODE"));

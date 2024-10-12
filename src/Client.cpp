@@ -1,16 +1,11 @@
 #include "../includes/Client.hpp"
-/*
-Client::Client(int fd, std::string nick, std::string user, std::string pass): _fd(fd), _nick(nick), _user(user), _pass(pass)
-{
 
-}*/
-
-Client::Client(int fd) : _fd(fd)
+Client::Client(int fd, char *ip) : _fd(fd)
 {
 	_password = "";
 	_nickname = "";
 	_username = "";
-	_hostname = "";
+	_hostname = ip;
 	_servername = "";
 	_realname = "";
 	_registered = false;
