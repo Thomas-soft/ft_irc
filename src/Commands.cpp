@@ -55,6 +55,8 @@ void    pass(std::vector<std::string> args, Server &server, Client &client)
 
 void    nick(std::vector<std::string> args, Server &server, Client &client)
 {
+    if (client.is_registered() == false)
+        return ;
     if (client.get_password() == "")
     {
         server.send_to_client(client.get_fd(), ERR_PASSWDMISMATCH(SERVERNAME, client.get_nickname()));
