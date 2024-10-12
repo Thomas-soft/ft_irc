@@ -2,7 +2,7 @@
 
 void    execute_cmd(std::string cmd, std::vector<std::string> args, Server &server, Client &client)
 {
-    std::string cmd_func[] = {"PING", "JOIN", "PART", "KICK", "PRIVMSG", "QUIT", "TOPIC", "INVITE", "MODE"};
+    std::string cmd_func[] = {"PING", "JOIN", "PART", "KICK", "PRIVMSG", "QUIT", "TOPIC", "INVITE", "MODE", "NICK"};
 	std::string cmd_func_unregistred[] = {"PASS", "NICK", "USER"};
     void    (*fun[])(std::vector<std::string> args, Server &server, Client &client) = {pass, nick, user, ping, join, part, kick, privmsg, quit, topic, invite, mode};
 
@@ -11,7 +11,7 @@ void    execute_cmd(std::string cmd, std::vector<std::string> args, Server &serv
         if (cmd_func_unregistred[i] == cmd)
             (*fun[i])(args, server, client);
     }
-    for (size_t i = 0; i < 9; i++)
+    for (size_t i = 0; i < 10; i++)
     {
         if (client.is_registered() && cmd_func[i] == cmd)
             (*fun[i + 3])(args, server, client);

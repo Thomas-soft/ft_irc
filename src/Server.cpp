@@ -308,7 +308,7 @@ bool    Server::is_nick_free(std::string nickname, int fd)
 {
     for (size_t i = 0; i < _client.size(); i++)
     {
-        if (_client[i].get_fd() != fd && _client[i].get_nickname() == nickname)
+        if (_client[i].get_fd() != fd && _client[i].get_nickname() == nickname && _client[i].is_registered() == true)
             return (false);
         if (_client[i].get_fd() != fd)
         {
